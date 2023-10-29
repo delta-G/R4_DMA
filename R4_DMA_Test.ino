@@ -5,63 +5,87 @@
     Serial.println(t, HEX); \
   } while (false)
 
+const uint8_t transferSize = 5;
 
 uint32_t source = 0xABCDEF01;
-uint32_t destination = 0;
+uint32_t destination[transferSize + 15] = { 0 };
 
+uint8_t buttonPin = 7;
+uint8_t oldButtonState = HIGH;
 
 void setup() {
 
+  pinMode(buttonPin, INPUT_PULLUP);
   Serial.begin(115200);
   while (!Serial)
     ;
   Serial.println("\n\n\nStarting R4_DMA_Test.ino");
 
-  
+
   setupDMA();
-  printRegisters(0);
 
-  Serial.print("Before Transfer : ");
-  Serial.print(source);
-  Serial.print("  :  ");
-  Serial.println(destination);
 
-  requestTransfer();
-  delay(10); // we can work on timing later
-
-  Serial.print("After Transfer : ");
-  Serial.print(source);
-  Serial.print("  :  ");
-  Serial.println(destination);
   Serial.println("End Setup");
 }
 
 void loop() {
+  uint8_t buttonState = digitalRead(buttonPin);
+  if (buttonState != oldButtonState) {
+    delay(20);
+    buttonState = digitalRead(buttonPin);
+    if (buttonState == LOW) {
+      doTransfer();
+    }
+    oldButtonState = buttonState;
+  }
 }
 
-void requestTransfer(){
-  R_DMAC0->DMREQ = 0x11;
+void doTransfer() {
+  source = source - 0x0F;
+  printRegisters(0);
+
+  Serial.print("Before Transfer : ");
+  printOutput();
+
+  requestTransfer();
+  delay(10);  // we can work on timing later
+
+  Serial.print("After Transfer : ");
+  printOutput();
 }
 
-void setupDMA(){
+void printOutput() {
+  Serial.print(source);
+  for (int i = 0; i < transferSize + 15; i++) {
+    Serial.print(" : ");
+    Serial.print(destination[i]);
+  }
+  Serial.println();
+}
+
+void requestTransfer() {
+  R_DMAC0->DMREQ = 0x01;
+}
+
+void setupDMA() {
   // disable controller
   R_DMA->DMAST = 0;
   // diable transfers
   R_DMAC0->DMCNT = 0;
   // DMA Address Mode Register (DMAMD)
   //(SM[1:0]) (-) (SARA[4:0]) (DM[1:0]) (-) (DARA[4:0])
-  R_DMAC0->DMAMD = 0;
+  R_DMAC0->DMAMD = 0x0080;
   // DMA Transfer Mode Register  (DMTMD)
   //(MD[1:0]) (DTS[1:0]) (--) (SZ[1:0]) (------) (DCTG[1:0])
-  // (00 Normal transfer) (10 no repeat block) (--) (10 32 bits) (------) (00 Software)
-  R_DMAC0->DMTMD = 0x2200;
+  // (01 Repeat transfer) (00 destination repeat block) (--) (10 32 bits) (------) (00 Software)
+  R_DMAC0->DMTMD = 0x4200;
   // set source address and destination address
   R_DMAC0->DMSAR = (uint32_t)&source;
-  R_DMAC0->DMDAR = (uint32_t)&destination;
-  // DMCRA to 0 for free running mode
-  R_DMAC0->DMCRA = 0;
+  R_DMAC0->DMDAR = (uint32_t)destination + 8;
+  // DMCRA to repeat size 5 and 10 transfers
+  R_DMAC0->DMCRA = 0x00050005;
   // Block transfer
-  R_DMAC0->DMCRB = 0;
+  R_DMAC0->DMCRB = 2;
   // offset register
   R_DMAC0->DMOFR = 0;
   // interrupts
