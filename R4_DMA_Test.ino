@@ -6,6 +6,10 @@
   } while (false)
 
 
+uint32_t source = 0xABCDEF01;
+uint32_t destination = 0;
+
+
 void setup() {
 
   Serial.begin(115200);
@@ -13,17 +17,62 @@ void setup() {
     ;
   Serial.println("\n\n\nStarting R4_DMA_Test.ino");
 
+  
+  setupDMA();
   printRegisters(0);
-  printRegisters(1);
-  printRegisters(2);
-  printRegisters(3);
 
+  Serial.print("Before Transfer : ");
+  Serial.print(source);
+  Serial.print("  :  ");
+  Serial.println(destination);
 
+  requestTransfer();
+  delay(10); // we can work on timing later
+
+  Serial.print("After Transfer : ");
+  Serial.print(source);
+  Serial.print("  :  ");
+  Serial.println(destination);
   Serial.println("End Setup");
 }
 
 void loop() {
 }
+
+void requestTransfer(){
+  R_DMAC0->DMREQ = 0x11;
+}
+
+void setupDMA(){
+  // disable controller
+  R_DMA->DMAST = 0;
+  // diable transfers
+  R_DMAC0->DMCNT = 0;
+  // DMA Address Mode Register (DMAMD)
+  //(SM[1:0]) (-) (SARA[4:0]) (DM[1:0]) (-) (DARA[4:0])
+  R_DMAC0->DMAMD = 0;
+  // DMA Transfer Mode Register  (DMTMD)
+  //(MD[1:0]) (DTS[1:0]) (--) (SZ[1:0]) (------) (DCTG[1:0])
+  // (00 Normal transfer) (10 no repeat block) (--) (10 32 bits) (------) (00 Software)
+  R_DMAC0->DMTMD = 0x2200;
+  // set source address and destination address
+  R_DMAC0->DMSAR = (uint32_t)&source;
+  R_DMAC0->DMDAR = (uint32_t)&destination;
+  // DMCRA to 0 for free running mode
+  R_DMAC0->DMCRA = 0;
+  // Block transfer
+  R_DMAC0->DMCRB = 0;
+  // offset register
+  R_DMAC0->DMOFR = 0;
+  // interrupts
+  R_DMAC0->DMINT = 0;
+
+  // enable transfer
+  R_DMAC0->DMCNT = 1;
+  // enable DMAC controller
+  R_DMA->DMAST = 1;
+}
+
 
 void printRegisters(uint8_t ch) {
   Serial.print("\nPrinting Registers for channel ");
