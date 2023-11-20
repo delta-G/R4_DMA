@@ -7,7 +7,7 @@
 
 const uint8_t transferSize = 5;
 
-uint32_t source = 0xABCDEF01;
+uint32_t source[transferSize + 15] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
 uint32_t destination[transferSize + 15] = { 0 };
 
 uint8_t buttonPin = 7;
@@ -41,7 +41,9 @@ void loop() {
 }
 
 void doTransfer() {
-  source = source - 0x0F;
+  for (int i = 0; i < transferSize + 15; i++) {
+    source[i]++;
+  }
   printRegisters(0);
 
   Serial.print("Before Transfer : ");
@@ -55,7 +57,12 @@ void doTransfer() {
 }
 
 void printOutput() {
-  Serial.print(source);
+  Serial.println();
+  for (int i = 0; i < transferSize + 15; i++) {
+    Serial.print(" : ");
+    Serial.print(source[i]);
+  }
+  Serial.println();
   for (int i = 0; i < transferSize + 15; i++) {
     Serial.print(" : ");
     Serial.print(destination[i]);
@@ -74,18 +81,18 @@ void setupDMA() {
   R_DMAC0->DMCNT = 0;
   // DMA Address Mode Register (DMAMD)
   //(SM[1:0]) (-) (SARA[4:0]) (DM[1:0]) (-) (DARA[4:0])
-  R_DMAC0->DMAMD = 0x0080;
+  R_DMAC0->DMAMD = 0x0000;
   // DMA Transfer Mode Register  (DMTMD)
   //(MD[1:0]) (DTS[1:0]) (--) (SZ[1:0]) (------) (DCTG[1:0])
   // (01 Repeat transfer) (00 destination repeat block) (--) (10 32 bits) (------) (00 Software)
-  R_DMAC0->DMTMD = 0x4200;
+  R_DMAC0->DMTMD = 0x2200;
   // set source address and destination address
   R_DMAC0->DMSAR = (uint32_t)&source;
   R_DMAC0->DMDAR = (uint32_t)destination + 8;
   // DMCRA to repeat size 5 and 10 transfers
-  R_DMAC0->DMCRA = 0x00050005;
+  R_DMAC0->DMCRA = 0x00000005;
   // Block transfer
-  R_DMAC0->DMCRB = 2;
+  R_DMAC0->DMCRB = 0;
   // offset register
   R_DMAC0->DMOFR = 0;
   // interrupts
