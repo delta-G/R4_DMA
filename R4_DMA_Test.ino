@@ -40,7 +40,7 @@ void setup() {
 
   setupDMA();
   DMA0.start(&settings);
-  DMA0.attachTransferEndInterrupt(xferEndHandler);
+  // DMA0.attachTransferEndInterrupt(xferEndHandler);
 
   Serial.println("End Setup");
 }
@@ -90,13 +90,13 @@ void printOutput() {
 void setupDMA() {
   settings.sourceUpdateMode = SOURCE_INCREMENT;
   settings.destUpdateMode = DEST_INCREMENT;
-  settings.mode = BLOCK;
+  settings.mode = REPEAT;
   settings.repeatAreaSelection = REPEAT_DESTINATION;
   settings.transferSize = SZ_32_BIT;
   settings.triggerSource = SOFTWARE;
   settings.sourceAddress = (uint32_t)&source;
   settings.destAddress = (uint32_t)destination + 8;
-  settings.blockSize = 3;
+  settings.repeatSize = 3;
   settings.transferCount = 5;
 }
 
