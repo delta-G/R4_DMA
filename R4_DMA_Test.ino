@@ -87,52 +87,17 @@ void printOutput() {
   Serial.println();
 }
 
-// void requestTransfer() {
-//   R_DMAC0->DMREQ = 0x01;
-  
-// }
-
 void setupDMA() {
-
-  // // disable controller
-  // R_DMA->DMAST = 0;
-  // // diable transfers
-  // R_DMAC0->DMCNT = 0;
-  // DMA Address Mode Register (DMAMD)
-  //(SM[1:0]) (-) (SARA[4:0]) (DM[1:0]) (-) (DARA[4:0])
-  // R_DMAC0->DMAMD = 0x8080;
   settings.sourceUpdateMode = SOURCE_INCREMENT;
   settings.destUpdateMode = DEST_INCREMENT;
-  // DMA Transfer Mode Register  (DMTMD)
-  //(MD[1:0]) (DTS[1:0]) (--) (SZ[1:0]) (------) (DCTG[1:0])
-  // (01 Repeat transfer) (00 destination repeat block) (--) (10 32 bits) (------) (00 Software)
-  // R_DMAC0->DMTMD = 0x8200;
   settings.mode = BLOCK;
   settings.repeatAreaSelection = REPEAT_DESTINATION;
   settings.transferSize = SZ_32_BIT;
   settings.triggerSource = SOFTWARE;
-  // set source address and destination address
-  // R_DMAC0->DMSAR = (uint32_t)&source;
-  // R_DMAC0->DMDAR = (uint32_t)destination + 8;
   settings.sourceAddress = (uint32_t)&source;
   settings.destAddress = (uint32_t)destination + 8;
-  // DMCRA to repeat size 3 
-  // R_DMAC0->DMCRA = 0x00030003;
   settings.blockSize = 3;
-  // Block transfer
-  // R_DMAC0->DMCRB = 5;
   settings.transferCount = 5;
-  // offset register
-  // R_DMAC0->DMOFR = 0;
-  // interrupts
-  // R_DMAC0->DMINT = 0x10;
-
-  // dtiEventLinkIndex = attachEventLinkInterrupt(0x11, dtiHandler);
-  
-  // // enable transfer
-  // R_DMAC0->DMCNT = 1;
-  // // enable DMAC controller
-  // R_DMA->DMAST = 1;
 }
 
 
