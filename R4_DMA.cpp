@@ -22,6 +22,33 @@ R4_DMA.cpp  --  Use DMA controller on UNO-R4 boards.
 
 DMA_Channel DMA0(R_DMAC0);
 
+void dtiHandler(){
+  DMA0.internalHandler();
+}
+
+void DMA_Channel::internalHandler(){
+  resetEventLink(eventLinkIndex);
+  // Clear Interrupt Flag in DMAC
+  channel->DMSTS = 0x00;
+  if(isrCallback){
+    isrCallback();
+  }
+}
+
+void DMA_Channel::startInterrupt(){
+  if(eventLinkIndex == -1){
+    eventLinkIndex = attachEventLinkInterrupt(0x11, dtiHandler);
+  }
+}
+
+void DMA_Channel::attachTransferEndInterrupt(void (*isr)()){
+  if(eventLinkIndex < 0){
+    startInterrupt();
+  }
+  channel->DMINT = 0x10;
+  isrCallback = isr;
+}
+
 void DMA_Channel::requestTransfer(){
   channel->DMREQ = 0x01;
 }

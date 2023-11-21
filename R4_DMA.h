@@ -22,6 +22,7 @@ R4_DMA.h  --  Use DMA controller on UNO-R4 boards.
 #define R4_DMA_H
 
 #include "Arduino.h"
+#include "EventLinkInterrupt.h"
 
 // DMA Trigger Source
 typedef enum {
@@ -89,6 +90,9 @@ struct DMA_Settings {
 class DMA_Channel {
   R_DMAC0_Type* channel;
   DMA_Settings* settings;
+  int eventLinkIndex = -1;
+  void (*isrCallback)();
+  void startInterrupt();
 
 public:
 
@@ -96,6 +100,8 @@ public:
     : channel(aChannel){};
   void start(DMA_Settings* aSettings);
   void requestTransfer();
+  void attachTransferEndInterrupt(void (*isr)());
+  void internalHandler();
 };
 
 extern DMA_Channel DMA0;

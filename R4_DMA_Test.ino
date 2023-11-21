@@ -19,10 +19,7 @@ uint8_t oldButtonState = HIGH;
 int dtiEventLinkIndex;
 DMA_Settings settings;
 
-void dtiHandler(){
-  resetEventLink(dtiEventLinkIndex);
-  // Clear Interrupt Flag in DMAC
-  R_DMAC0->DMSTS = 0x00;
+void xferEndHandler(){
   // reset Source Address
   R_DMAC0->DMSAR = (uint32_t)&source;
   //reset counter
@@ -41,9 +38,9 @@ void setup() {
     ;
   Serial.println("\n\n\nStarting R4_DMA_Test.ino");
 
-
   setupDMA();
   DMA0.start(&settings);
+  DMA0.attachTransferEndInterrupt(xferEndHandler);
 
   Serial.println("End Setup");
 }
