@@ -50,11 +50,6 @@ void DMA_Channel::startInterrupt(){
       R_BSP_IrqEnable((IRQn_Type)eventLinkIndex);
     }
     interrupts();
-
-
-
-
-    // eventLinkIndex = attachEventLinkInterrupt(0x11, dtiHandler);
   }
 }
 

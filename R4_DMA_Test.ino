@@ -6,6 +6,7 @@
   } while (false)
 
 #include "R4_DMA.h"
+#include "TimerOne.h"
 
 const uint8_t transferSize = 5;
 
@@ -24,9 +25,14 @@ void xferEndHandler(){
   //reset counter
   R_DMAC0->DMCRB = 5;
   // Re-enable DMAC
-  R_DMAC0->DMCNT = 1;
+  R_DMAC0->DMCNT = 1;  
+}
 
-  
+volatile bool printNeeded = false;
+
+void timerHandler(){
+  DMA0.requestTransfer();
+  printNeeded = true;
 }
 
 void setup() {
@@ -41,18 +47,18 @@ void setup() {
   DMA0.start(&settings);
   DMA0.attachTransferEndInterrupt(xferEndHandler);
 
+  Timer1.initialize(500000);
+  Timer1.attachInterrupt(timerHandler);
+
   Serial.println("End Setup");
 }
 
 void loop() {
-  uint8_t buttonState = digitalRead(buttonPin);
-  if (buttonState != oldButtonState) {
-    delay(20);
-    buttonState = digitalRead(buttonPin);
-    if (buttonState == LOW) {
-      doTransfer();
-    }
-    oldButtonState = buttonState;
+  if(printNeeded){
+    printNeeded = false;
+    delay(50);
+    printRegisters(0);
+    printOutput();
   }
 }
 
