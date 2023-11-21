@@ -22,7 +22,7 @@ R4_DMA.h  --  Use DMA controller on UNO-R4 boards.
 #define R4_DMA_H
 
 #include "Arduino.h"
-#include "EventLinkInterrupt.h"
+#include "IRQManager.h"
 
 // DMA Trigger Source
 typedef enum {
@@ -72,7 +72,7 @@ struct DMA_Settings {
 
   MD_Option mode;
   DCGT_Option triggerSource;
-  SZ_Option transferSize;
+  SZ_Option unitSize;
   DTS_Option repeatAreaSelection;
   SM_Option sourceUpdateMode;
   DM_Option destUpdateMode;
@@ -82,8 +82,7 @@ struct DMA_Settings {
   uint32_t addressOffset;
 
   uint16_t transferCount;
-  uint16_t repeatSize;
-  uint16_t blockSize;
+  uint16_t transferSize;
 };
 
 

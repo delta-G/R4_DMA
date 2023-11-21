@@ -27,7 +27,7 @@ void dtiHandler(){
 }
 
 void DMA_Channel::internalHandler(){
-  resetEventLink(eventLinkIndex);
+  R_ICU->IELSR[eventLinkIndex] &= ~(R_ICU_IELSR_IR_Msk);
   // Clear Interrupt Flag in DMAC
   channel->DMSTS = 0x00;
   if(isrCallback){
@@ -37,7 +37,24 @@ void DMA_Channel::internalHandler(){
 
 void DMA_Channel::startInterrupt(){
   if(eventLinkIndex == -1){
-    eventLinkIndex = attachEventLinkInterrupt(0x11, dtiHandler);
+
+    dmac_extended_cfg_t cfg;
+    cfg.irq = FSP_INVALID_VECTOR;
+    cfg.channel = 0;
+    noInterrupts();
+    if(IRQManager::getInstance().addDMA(cfg, dtiHandler)){
+      eventLinkIndex = cfg.irq;
+      R_BSP_IrqDisable((IRQn_Type)eventLinkIndex);
+      R_BSP_IrqStatusClear((IRQn_Type)eventLinkIndex);
+      NVIC_SetPriority((IRQn_Type)eventLinkIndex, 12);
+      R_BSP_IrqEnable((IRQn_Type)eventLinkIndex);
+    }
+    interrupts();
+
+
+
+
+    // eventLinkIndex = attachEventLinkInterrupt(0x11, dtiHandler);
   }
 }
 
@@ -65,7 +82,7 @@ void DMA_Channel::start(DMA_Settings* aSettings) {
   // set transfer Mode
   channel->DMTMD = (settings->mode << R_DMAC0_DMTMD_MD_Pos)
                    | (settings->repeatAreaSelection << R_DMAC0_DMTMD_DTS_Pos)
-                   | (settings->transferSize << R_DMAC0_DMTMD_SZ_Pos)
+                   | (settings->unitSize << R_DMAC0_DMTMD_SZ_Pos)
                    | (settings->triggerSource << R_DMAC0_DMTMD_DCTG_Pos);
   // set source and destination address
   channel->DMSAR = settings->sourceAddress;
@@ -77,11 +94,11 @@ void DMA_Channel::start(DMA_Settings* aSettings) {
       channel->DMCRB = 0;
       break;
     case REPEAT:
-      channel->DMCRA = (settings->repeatSize << 16) | settings->repeatSize;
+      channel->DMCRA = (settings->transferSize << 16) | settings->transferSize;
       channel->DMCRB = settings->transferCount;
       break;
     case BLOCK:
-      channel->DMCRA = (settings->blockSize << 16) | settings->blockSize;
+      channel->DMCRA = (settings->transferSize << 16) | settings->transferSize;
       channel->DMCRB = settings->transferCount;
       break;
   }

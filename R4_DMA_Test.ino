@@ -5,7 +5,6 @@
     Serial.println(t, HEX); \
   } while (false)
 
-#include "EventLinkInterrupt.h"
 #include "R4_DMA.h"
 
 const uint8_t transferSize = 5;
@@ -40,7 +39,7 @@ void setup() {
 
   setupDMA();
   DMA0.start(&settings);
-  // DMA0.attachTransferEndInterrupt(xferEndHandler);
+  DMA0.attachTransferEndInterrupt(xferEndHandler);
 
   Serial.println("End Setup");
 }
@@ -90,13 +89,13 @@ void printOutput() {
 void setupDMA() {
   settings.sourceUpdateMode = SOURCE_INCREMENT;
   settings.destUpdateMode = DEST_INCREMENT;
-  settings.mode = REPEAT;
+  settings.mode = BLOCK;
   settings.repeatAreaSelection = REPEAT_DESTINATION;
-  settings.transferSize = SZ_32_BIT;
+  settings.unitSize = SZ_32_BIT;
   settings.triggerSource = SOFTWARE;
   settings.sourceAddress = (uint32_t)&source;
   settings.destAddress = (uint32_t)destination + 8;
-  settings.repeatSize = 3;
+  settings.transferSize = 3;
   settings.transferCount = 5;
 }
 
