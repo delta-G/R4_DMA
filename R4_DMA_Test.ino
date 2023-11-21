@@ -6,7 +6,6 @@
   } while (false)
 
 #include "R4_DMA.h"
-#include "TimerOne.h"
 
 const uint8_t transferSize = 5;
 
@@ -28,13 +27,6 @@ void xferEndHandler(){
   R_DMAC0->DMCNT = 1;  
 }
 
-volatile bool printNeeded = false;
-
-void timerHandler(){
-  DMA0.requestTransfer();
-  printNeeded = true;
-}
-
 void setup() {
 
   pinMode(buttonPin, INPUT_PULLUP);
@@ -43,21 +35,19 @@ void setup() {
     ;
   Serial.println("\n\n\nStarting R4_DMA_Test.ino");
 
+  setupAGT1();
   setupDMA();
   DMA0.start(&settings);
-  DMA0.attachTransferEndInterrupt(xferEndHandler);
-
-  Timer1.initialize(500000);
-  Timer1.attachInterrupt(timerHandler);
+  DMA0.attachTransferEndInterrupt(xferEndHandler);  
+  DMA0.setTriggerSource(0x21); // set for AGT1 underflow
 
   Serial.println("End Setup");
 }
 
 void loop() {
-  if(printNeeded){
-    printNeeded = false;
-    delay(50);
-    printRegisters(0);
+  static uint32_t oldVal = 0;
+  if(destination[2] != oldVal){
+    oldVal = destination[2];
     printOutput();
   }
 }
@@ -98,13 +88,41 @@ void setupDMA() {
   settings.mode = BLOCK;
   settings.repeatAreaSelection = REPEAT_DESTINATION;
   settings.unitSize = SZ_32_BIT;
-  settings.triggerSource = SOFTWARE;
   settings.sourceAddress = (uint32_t)&source;
   settings.destAddress = (uint32_t)destination + 8;
   settings.transferSize = 3;
   settings.transferCount = 5;
 }
 
+void setupAGT1(){
+  // enable the timer in Module Stop Control Register D
+    R_MSTP->MSTPCRD &= ~(1 << R_MSTP_MSTPCRD_MSTPD2_Pos);
+    //  Make sure timer is stopped while we adjust registers.
+    R_AGT1->AGTCR = 0;
+
+    // We're using R_AGT1, but all the positions and bitmasks are defined as R_AGT0
+    // set mode register 1
+    //(-) (TCK[2:0]) (TEDGPL) (TMOD[2:0])
+    //  Use TIMER mode with the LOCO clock (best we can do since Arduino doesn't have crystal for SOSC)
+    R_AGT1->AGTMR1 = (4 << R_AGT0_AGTMR1_TCK_Pos);
+    // mode register 2
+    // (LPM) (----) (CKS[2:0])
+    R_AGT1->AGTMR2 = 0;
+    // AGT I/O Control Register
+    // (TIOGT[1:0]) (TIPF[1:0]) (-) (TOE) (-) (TEDGSEL)
+    R_AGT1->AGTIOC = 0;
+    // Event Pin Select Register
+    // (-----) (EEPS) (--)
+    R_AGT1->AGTISR = 0;
+    // AGT Compare Match Function Select Register
+    // (-) (TOPOLB) (TOEB) (TCMEB) (-) (TOPOLA) (TOEA) (TCMEA)
+    R_AGT1->AGTCMSR = 0;
+    // AGT Pin Select Register
+    // (---) (TIES) (--) (SEL[1:0])
+    R_AGT1->AGTIOSEL = 0;
+    R_AGT1->AGT = 16384;   // 500ms
+    R_AGT1->AGTCR = 1;
+}
 
 void printRegisters(uint8_t ch) {
   Serial.print("\nPrinting Registers for channel ");

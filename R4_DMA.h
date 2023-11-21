@@ -24,12 +24,6 @@ R4_DMA.h  --  Use DMA controller on UNO-R4 boards.
 #include "Arduino.h"
 #include "IRQManager.h"
 
-// DMA Trigger Source
-typedef enum {
-  SOFTWARE,
-  INTERRUPT
-} DCGT_Option;
-
 // DMA transfer unit size
 typedef enum {
   SZ_8_BIT,
@@ -71,7 +65,6 @@ typedef enum {
 struct DMA_Settings {
 
   MD_Option mode;
-  DCGT_Option triggerSource;
   SZ_Option unitSize;
   DTS_Option repeatAreaSelection;
   SM_Option sourceUpdateMode;
@@ -101,6 +94,7 @@ public:
   void requestTransfer();
   void attachTransferEndInterrupt(void (*isr)());
   void internalHandler();
+  void setTriggerSource(uint8_t source);
 };
 
 extern DMA_Channel DMA0;

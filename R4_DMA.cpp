@@ -22,27 +22,27 @@ R4_DMA.cpp  --  Use DMA controller on UNO-R4 boards.
 
 DMA_Channel DMA0(R_DMAC0);
 
-void dtiHandler(){
+void dtiHandler() {
   DMA0.internalHandler();
 }
 
-void DMA_Channel::internalHandler(){
+void DMA_Channel::internalHandler() {
   R_ICU->IELSR[eventLinkIndex] &= ~(R_ICU_IELSR_IR_Msk);
   // Clear Interrupt Flag in DMAC
   channel->DMSTS = 0x00;
-  if(isrCallback){
+  if (isrCallback) {
     isrCallback();
   }
 }
 
-void DMA_Channel::startInterrupt(){
-  if(eventLinkIndex == -1){
+void DMA_Channel::startInterrupt() {
+  if (eventLinkIndex == -1) {
 
     dmac_extended_cfg_t cfg;
     cfg.irq = FSP_INVALID_VECTOR;
     cfg.channel = 0;
     noInterrupts();
-    if(IRQManager::getInstance().addDMA(cfg, dtiHandler)){
+    if (IRQManager::getInstance().addDMA(cfg, dtiHandler)) {
       eventLinkIndex = cfg.irq;
       R_BSP_IrqDisable((IRQn_Type)eventLinkIndex);
       R_BSP_IrqStatusClear((IRQn_Type)eventLinkIndex);
@@ -53,15 +53,29 @@ void DMA_Channel::startInterrupt(){
   }
 }
 
-void DMA_Channel::attachTransferEndInterrupt(void (*isr)()){
-  if(eventLinkIndex < 0){
+void DMA_Channel::attachTransferEndInterrupt(void (*isr)()) {
+  if (eventLinkIndex < 0) {
     startInterrupt();
   }
   channel->DMINT = 0x10;
   isrCallback = isr;
 }
 
-void DMA_Channel::requestTransfer(){
+void DMA_Channel::setTriggerSource(uint8_t source) {
+  // diable transfers
+  channel->DMCNT = 0;
+  if (source) {
+    R_ICU->DELSR[0] = source;
+    channel-> DMTMD |= 1;
+  } else {
+    // set as software Trigger
+    channel->DMTMD &= ~1;
+  }
+  // enable transfer
+  channel->DMCNT = 1;
+}
+
+void DMA_Channel::requestTransfer() {
   channel->DMREQ = 0x01;
 }
 
@@ -77,8 +91,7 @@ void DMA_Channel::start(DMA_Settings* aSettings) {
   // set transfer Mode
   channel->DMTMD = (settings->mode << R_DMAC0_DMTMD_MD_Pos)
                    | (settings->repeatAreaSelection << R_DMAC0_DMTMD_DTS_Pos)
-                   | (settings->unitSize << R_DMAC0_DMTMD_SZ_Pos)
-                   | (settings->triggerSource << R_DMAC0_DMTMD_DCTG_Pos);
+                   | (settings->unitSize << R_DMAC0_DMTMD_SZ_Pos);
   // set source and destination address
   channel->DMSAR = settings->sourceAddress;
   channel->DMDAR = settings->destAddress;
