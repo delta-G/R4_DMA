@@ -20,11 +20,33 @@ R4_DMA.cpp  --  Use DMA controller on UNO-R4 boards.
 
 #include "R4_DMA.h"
 
-DMA_Channel DMA0(R_DMAC0);
+DMA_Channel DMA0(0);
+DMA_Channel DMA1(1);
+DMA_Channel DMA2(2);
+DMA_Channel DMA3(3);
 
-void dtiHandler() {
+void dtiHandler0() {
   DMA0.internalHandler();
 }
+void dtiHandler1() {
+  DMA1.internalHandler();
+}
+void dtiHandler2() {
+  DMA2.internalHandler();
+}
+void dtiHandler3() {
+  DMA3.internalHandler();
+}
+
+void (*handlers[])() = { dtiHandler0, dtiHandler1, dtiHandler2, dtiHandler3 };
+
+DMA_Channel::DMA_Channel(uint8_t aChannel)
+  : channelIndex(aChannel) {
+  R_DMAC0_Type* channels[] = { R_DMAC0, R_DMAC1, R_DMAC2, R_DMAC3 };
+  if (aChannel < 4) {
+    channel = channels[channelIndex];
+  }
+};
 
 void DMA_Channel::internalHandler() {
   R_ICU->IELSR[eventLinkIndex] &= ~(R_ICU_IELSR_IR_Msk);
@@ -37,12 +59,12 @@ void DMA_Channel::internalHandler() {
 
 void DMA_Channel::startInterrupt() {
   if (eventLinkIndex == -1) {
-
     dmac_extended_cfg_t cfg;
     cfg.irq = FSP_INVALID_VECTOR;
-    cfg.channel = 0;
+    cfg.channel = channelIndex;
     noInterrupts();
-    if (IRQManager::getInstance().addDMA(cfg, dtiHandler)) {
+
+    if ((IRQManager::getInstance().addDMA(cfg, handlers[channelIndex]))) {
       eventLinkIndex = cfg.irq;
       R_BSP_IrqDisable((IRQn_Type)eventLinkIndex);
       R_BSP_IrqStatusClear((IRQn_Type)eventLinkIndex);
@@ -65,8 +87,8 @@ void DMA_Channel::setTriggerSource(uint8_t source) {
   // diable transfers
   channel->DMCNT = 0;
   if (source) {
-    R_ICU->DELSR[0] = source;
-    channel-> DMTMD |= 1;
+    R_ICU->DELSR[channelIndex] = source;
+    channel->DMTMD |= 1;
   } else {
     // set as software Trigger
     channel->DMTMD &= ~1;

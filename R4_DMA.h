@@ -81,6 +81,7 @@ struct DMA_Settings {
 
 class DMA_Channel {
   R_DMAC0_Type* channel;
+  uint8_t channelIndex;
   DMA_Settings* settings;
   int eventLinkIndex = -1;
   void (*isrCallback)();
@@ -88,8 +89,7 @@ class DMA_Channel {
 
 public:
 
-  DMA_Channel(R_DMAC0_Type* aChannel)
-    : channel(aChannel){};
+  DMA_Channel(uint8_t aChannel);
   void start(DMA_Settings* aSettings);
   void requestTransfer();
   void attachTransferEndInterrupt(void (*isr)());
@@ -98,5 +98,8 @@ public:
 };
 
 extern DMA_Channel DMA0;
+extern DMA_Channel DMA1;
+extern DMA_Channel DMA2;
+extern DMA_Channel DMA3;
 
 #endif  //R4_DMA_H

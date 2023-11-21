@@ -20,11 +20,11 @@ DMA_Settings settings;
 
 void xferEndHandler(){
   // reset Source Address
-  R_DMAC0->DMSAR = (uint32_t)&source;
+  R_DMAC1->DMSAR = (uint32_t)&source;
   //reset counter
-  R_DMAC0->DMCRB = 5;
+  R_DMAC1->DMCRB = 5;
   // Re-enable DMAC
-  R_DMAC0->DMCNT = 1;  
+  R_DMAC1->DMCNT = 1;  
 }
 
 void setup() {
@@ -37,9 +37,9 @@ void setup() {
 
   setupAGT1();
   setupDMA();
-  DMA0.start(&settings);
-  DMA0.attachTransferEndInterrupt(xferEndHandler);  
-  DMA0.setTriggerSource(0x21); // set for AGT1 underflow
+  DMA1.start(&settings);
+  DMA1.attachTransferEndInterrupt(xferEndHandler);  
+  DMA1.setTriggerSource(0x21); // set for AGT1 underflow
 
   Serial.println("End Setup");
 }
