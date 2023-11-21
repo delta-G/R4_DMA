@@ -19,3 +19,50 @@ R4_DMA.cpp  --  Use DMA controller on UNO-R4 boards.
      */
 
 #include "R4_DMA.h"
+
+DMA_Channel DMA0(R_DMAC0);
+
+void DMA_Channel::requestTransfer(){
+  channel->DMREQ = 0x01;
+}
+
+void DMA_Channel::start(DMA_Settings* aSettings) {
+  settings = aSettings;
+  // disable controller
+  R_DMA->DMAST = 0;
+  // diable transfers
+  channel->DMCNT = 0;
+  //set Address Mode Register
+  channel->DMAMD = (settings->sourceUpdateMode << R_DMAC0_DMAMD_SM_Pos)
+                   | (settings->destUpdateMode << R_DMAC0_DMAMD_DM_Pos);
+  // set transfer Mode
+  channel->DMTMD = (settings->mode << R_DMAC0_DMTMD_MD_Pos)
+                   | (settings->repeatAreaSelection << R_DMAC0_DMTMD_DTS_Pos)
+                   | (settings->transferSize << R_DMAC0_DMTMD_SZ_Pos)
+                   | (settings->triggerSource << R_DMAC0_DMTMD_DCTG_Pos);
+  // set source and destination address
+  channel->DMSAR = settings->sourceAddress;
+  channel->DMDAR = settings->destAddress;
+  // set repeat size and transfer counter and block count
+  switch (settings->mode) {
+    case NORMAL:
+      channel->DMCRA = settings->transferCount;
+      channel->DMCRB = 0;
+      break;
+    case REPEAT:
+      channel->DMCRA = (settings->repeatSize << 16) | settings->repeatSize;
+      channel->DMCRB = settings->transferCount;
+      break;
+    case BLOCK:
+      channel->DMCRA = (settings->blockSize << 16) | settings->blockSize;
+      channel->DMCRB = settings->transferCount;
+      break;
+  }
+  // set offset register
+  channel->DMOFR = settings->addressOffset;
+
+  // enable transfer
+  channel->DMCNT = 1;
+  // enable DMAC controller
+  R_DMA->DMAST = 1;
+}

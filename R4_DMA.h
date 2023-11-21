@@ -21,5 +21,83 @@ R4_DMA.h  --  Use DMA controller on UNO-R4 boards.
 #ifndef R4_DMA_H
 #define R4_DMA_H
 
+#include "Arduino.h"
 
-#endif //R4_DMA_H
+// DMA Trigger Source
+typedef enum {
+  SOFTWARE,
+  INTERRUPT
+} DCGT_Option;
+
+// DMA transfer unit size
+typedef enum {
+  SZ_8_BIT,
+  SZ_16_BIT,
+  SZ_32_BIT
+} SZ_Option;
+
+// DMA Repeat Area Select
+typedef enum {
+  REPEAT_DESTINATION,
+  REPEAT_SOURCE,
+  NO_REPEAT
+} DTS_Option;
+
+// DMA Transfer Mode Selection
+typedef enum {
+  NORMAL,
+  REPEAT,
+  BLOCK
+} MD_Option;
+
+// DMA Source Address Update Mode
+typedef enum {
+  SOURCE_FIXED,
+  SOURCE_OFFSET,
+  SOURCE_INCREMENT,
+  SOURCE_DECREMENT
+} SM_Option;
+
+// DMA Destination Address Update Mode
+typedef enum {
+  DEST_FIXED,
+  DEST_OFFSET,
+  DEST_INCREMENT,
+  DEST_DECREMENT
+} DM_Option;
+
+
+struct DMA_Settings {
+
+  MD_Option mode;
+  DCGT_Option triggerSource;
+  SZ_Option transferSize;
+  DTS_Option repeatAreaSelection;
+  SM_Option sourceUpdateMode;
+  DM_Option destUpdateMode;
+
+  uint32_t sourceAddress;
+  uint32_t destAddress;
+  uint32_t addressOffset;
+
+  uint16_t transferCount;
+  uint16_t repeatSize;
+  uint16_t blockSize;
+};
+
+
+class DMA_Channel {
+  R_DMAC0_Type* channel;
+  DMA_Settings* settings;
+
+public:
+
+  DMA_Channel(R_DMAC0_Type* aChannel)
+    : channel(aChannel){};
+  void start(DMA_Settings* aSettings);
+  void requestTransfer();
+};
+
+extern DMA_Channel DMA0;
+
+#endif  //R4_DMA_H
