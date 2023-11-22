@@ -40,6 +40,17 @@ void dtiHandler3() {
 
 void (*handlers[])() = { dtiHandler0, dtiHandler1, dtiHandler2, dtiHandler3 };
 
+DMA_Channel* DMA_Channel::getChannel(){
+  DMA_Channel* channels[] = { &DMA0, &DMA1, &DMA2, &DMA3 };
+  static bool assigned[4] = {false, false, false, false};
+  for(int i=0; i<4; i++){
+    if(!assigned[i]){
+      return channels[i];
+    }
+  }
+  return 0;
+}
+
 DMA_Channel::DMA_Channel(uint8_t aChannel)
   : channelIndex(aChannel) {
   R_DMAC0_Type* channels[] = { R_DMAC0, R_DMAC1, R_DMAC2, R_DMAC3 };

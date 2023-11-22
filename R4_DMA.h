@@ -95,6 +95,7 @@ public:
   void attachTransferEndInterrupt(void (*isr)());
   void internalHandler();
   void setTriggerSource(uint8_t source);
+  static DMA_Channel* getChannel();
 };
 
 extern DMA_Channel DMA0;
