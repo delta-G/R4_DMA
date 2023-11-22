@@ -20,36 +20,31 @@
 
 #include "R4_DMA.h"
 
-DMA_Channel DMA0(0);
-DMA_Channel DMA1(1);
-DMA_Channel DMA2(2);
-DMA_Channel DMA3(3);
 
-DMA_Channel *channels[4];
+DMA_Channel DMA_Channel::channels[4] = {DMA_Channel(0), DMA_Channel(1), DMA_Channel(2), DMA_Channel(3)};
 
 void dtiHandler0() {
-	DMA0.internalHandler();
+	DMA_Channel::channels[0].internalHandler();
 }
 void dtiHandler1() {
-	DMA1.internalHandler();
+	DMA_Channel::channels[1].internalHandler();
 }
 void dtiHandler2() {
-	DMA2.internalHandler();
+	DMA_Channel::channels[2].internalHandler();
 }
 void dtiHandler3() {
-	DMA3.internalHandler();
+	DMA_Channel::channels[3].internalHandler();
 }
 
 void (*handlers[])() = {dtiHandler0, dtiHandler1, dtiHandler2, dtiHandler3};
 
 DMA_Channel* DMA_Channel::getChannel() {
-//  DMA_Channel* channels[] = { &DMA0, &DMA1, &DMA2, &DMA3 };
 	static bool assigned[4] = { false, false, false, false };
 	for (int i = 0; i < 4; i++) {
 		if (!assigned[i]) {
 			// mark the channel as used
 			assigned[i] = true;
-			return channels[i];
+			return &(channels[i]);
 		}
 	}
 	return 0;

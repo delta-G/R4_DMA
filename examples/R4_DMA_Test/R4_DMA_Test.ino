@@ -17,15 +17,18 @@ uint8_t oldButtonState = HIGH;
 
 int dtiEventLinkIndex;
 DMA_Settings settings;
+DMA_Channel* DMA;
 
 void xferEndHandler(){
   // reset Source Address
-  R_DMAC1->DMSAR = (uint32_t)&source;
+  DMA->channel->DMSAR = (uint32_t)&source;
   //reset counter
-  R_DMAC1->DMCRB = 5;
+  DMA->channel->DMCRB = 5;
   // Re-enable DMAC
-  R_DMAC1->DMCNT = 1;  
+  DMA->channel->DMCNT = 1;  
 }
+
+
 
 void setup() {
 
@@ -37,9 +40,14 @@ void setup() {
 
   setupAGT1();
   setupDMA();
-  DMA1.start(&settings);
-  DMA1.attachTransferEndInterrupt(xferEndHandler);  
-  DMA1.setTriggerSource(0x21); // set for AGT1 underflow
+  DMA = DMA_Channel::getChannel();
+  if(!DMA){
+    Serial.println("Didn't get DMA Channel!");
+    while(1);
+  }
+  DMA->start(&settings);
+  DMA->attachTransferEndInterrupt(xferEndHandler);  
+  DMA->setTriggerSource(0x21); // set for AGT1 underflow
 
   Serial.println("End Setup");
 }

@@ -78,15 +78,20 @@ struct DMA_Settings {
 };
 
 class DMA_Channel {
-	R_DMAC0_Type *channel;
+	
 	uint8_t channelIndex;
 	DMA_Settings *settings;
 	int eventLinkIndex = -1;
 	void (*isrCallback)();
 	void startInterrupt();
+	friend void dtiHandler0();
+	friend void dtiHandler1();
+	friend void dtiHandler2();
+	friend void dtiHandler3();
+	static DMA_Channel channels[4];
 
 public:
-
+	R_DMAC0_Type *channel;
 	DMA_Channel(uint8_t aChannel);
 	void start(DMA_Settings *aSettings);
 	void requestTransfer();
