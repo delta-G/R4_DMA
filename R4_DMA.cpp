@@ -22,6 +22,7 @@
 
 
 DMA_Channel DMA_Channel::channels[4] = {DMA_Channel(0), DMA_Channel(1), DMA_Channel(2), DMA_Channel(3)};
+bool DMA_Channel::assigned[4]  = { false, false, false, false };
 
 void dtiHandler0() {
 	DMA_Channel::channels[0].internalHandler();
@@ -39,7 +40,6 @@ void dtiHandler3() {
 void (*handlers[])() = {dtiHandler0, dtiHandler1, dtiHandler2, dtiHandler3};
 
 DMA_Channel* DMA_Channel::getChannel() {
-	static bool assigned[4] = { false, false, false, false };
 	for (int i = 0; i < 4; i++) {
 		if (!assigned[i]) {
 			// mark the channel as used

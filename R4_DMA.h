@@ -89,6 +89,7 @@ class DMA_Channel {
 	friend void dtiHandler2();
 	friend void dtiHandler3();
 	static DMA_Channel channels[4];
+	static bool assigned[4];
 
 public:
 	R_DMAC0_Type *channel;
