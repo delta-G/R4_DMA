@@ -16,18 +16,33 @@ uint8_t buttonPin = 7;
 uint8_t oldButtonState = HIGH;
 
 int dtiEventLinkIndex;
-DMA_Settings settings;
-DMA_Channel* DMA;
+DMA_Settings settings[4];
+DMA_Channel* DMA[4];
 
-void xferEndHandler(){
+void xferEndHandler0(){
   // reset Source Address
-  DMA->channel->DMSAR = (uint32_t)&source;
+  DMA[0]->channel->DMSAR = (uint32_t)&source;
   //reset counter
-  DMA->channel->DMCRB = 5;
+  DMA[0]->channel->DMCRB = 5;
   // Re-enable DMAC
-  DMA->channel->DMCNT = 1;  
+  DMA[0]->channel->DMCNT = 1;  
 }
-
+void xferEndHandler1(){
+  // reset Source Address
+  DMA[1]->channel->DMSAR = (uint32_t)&source + 4;
+  //reset counter
+  DMA[1]->channel->DMCRB = 5;
+  // Re-enable DMAC
+  DMA[1]->channel->DMCNT = 1;  
+}
+void xferEndHandler2(){
+  // reset Source Address
+  DMA[2]->channel->DMSAR = (uint32_t)&source + 8;
+  //reset counter
+  DMA[2]->channel->DMCRB = 5;
+  // Re-enable DMAC
+  DMA[2]->channel->DMCNT = 1;  
+}
 
 
 void setup() {
@@ -40,14 +55,33 @@ void setup() {
 
   setupAGT1();
   setupDMA();
-  DMA = DMA_Channel::getChannel();
-  if(!DMA){
-    Serial.println("Didn't get DMA Channel!");
+  DMA[0] = DMA_Channel::getChannel();
+  if(!DMA[0]){
+    Serial.println("Didn't get DMA Channel 0!");
     while(1);
   }
-  DMA->start(&settings);
-  DMA->attachTransferEndInterrupt(xferEndHandler);  
-  DMA->setTriggerSource(0x21); // set for AGT1 underflow
+  DMA[0]->start(&(settings[0]));
+  DMA[0]->attachTransferEndInterrupt(xferEndHandler0);  
+  DMA[0]->setTriggerSource(0x21); // set for AGT1 underflow
+
+  DMA[1] = DMA_Channel::getChannel();
+  if(!DMA[1]){
+    Serial.println("Didn't get DMA Channel 1!");
+    while(1);
+  }
+  DMA[1]->start(&(settings[1]));
+  DMA[1]->attachTransferEndInterrupt(xferEndHandler1);  
+  DMA[1]->setTriggerSource(0x22); // set for AGT1 compare match A
+
+  DMA[2] = DMA_Channel::getChannel();
+  if(!DMA[2]){
+    Serial.println("Didn't get DMA Channel 1!");
+    while(1);
+  }
+  DMA[2]->start(&(settings[2]));
+  DMA[2]->attachTransferEndInterrupt(xferEndHandler2);  
+  DMA[2]->setTriggerSource(0x23); // set for AGT1 compare match B
+
 
   Serial.println("End Setup");
 }
@@ -91,15 +125,46 @@ void printOutput() {
 }
 
 void setupDMA() {
-  settings.sourceUpdateMode = SOURCE_INCREMENT;
-  settings.destUpdateMode = DEST_INCREMENT;
-  settings.mode = BLOCK;
-  settings.repeatAreaSelection = REPEAT_DESTINATION;
-  settings.unitSize = SZ_32_BIT;
-  settings.sourceAddress = (uint32_t)&source;
-  settings.destAddress = (uint32_t)destination + 8;
-  settings.transferSize = 3;
-  settings.transferCount = 5;
+  settings[0].sourceUpdateMode = SOURCE_INCREMENT;
+  settings[0].destUpdateMode = DEST_INCREMENT;
+  settings[0].mode = BLOCK;
+  settings[0].repeatAreaSelection = REPEAT_DESTINATION;
+  settings[0].unitSize = SZ_32_BIT;
+  settings[0].sourceAddress = (uint32_t)&source;
+  settings[0].destAddress = (uint32_t)destination + 8;
+  settings[0].transferSize = 3;
+  settings[0].transferCount = 5;
+
+  settings[1].sourceUpdateMode = SOURCE_INCREMENT;
+  settings[1].destUpdateMode = DEST_INCREMENT;
+  settings[1].mode = BLOCK;
+  settings[1].repeatAreaSelection = REPEAT_DESTINATION;
+  settings[1].unitSize = SZ_32_BIT;
+  settings[1].sourceAddress = (uint32_t)&source + 1;
+  settings[1].destAddress = (uint32_t)destination + 32;
+  settings[1].transferSize = 3;
+  settings[1].transferCount = 5;
+
+  settings[2].sourceUpdateMode = SOURCE_INCREMENT;
+  settings[2].destUpdateMode = DEST_INCREMENT;
+  settings[2].mode = BLOCK;
+  settings[2].repeatAreaSelection = REPEAT_DESTINATION;
+  settings[2].unitSize = SZ_32_BIT;
+  settings[2].sourceAddress = (uint32_t)&source + 2;
+  settings[2].destAddress = (uint32_t)destination + 56;
+  settings[2].transferSize = 3;
+  settings[2].transferCount = 5;
+
+  // settings[3].sourceUpdateMode = SOURCE_INCREMENT;
+  // settings[3].destUpdateMode = DEST_INCREMENT;
+  // settings[3].mode = BLOCK;
+  // settings[3].repeatAreaSelection = REPEAT_DESTINATION;
+  // settings[3].unitSize = SZ_32_BIT;
+  // settings[3].sourceAddress = (uint32_t)&source;
+  // settings[3].destAddress = (uint32_t)destination + 8;
+  // settings[3].transferSize = 3;
+  // settings[3].transferCount = 5;
+  
 }
 
 void setupAGT1(){
@@ -128,7 +193,14 @@ void setupAGT1(){
     // AGT Pin Select Register
     // (---) (TIES) (--) (SEL[1:0])
     R_AGT1->AGTIOSEL = 0;
-    R_AGT1->AGT = 16384;   // 500ms
+    R_AGT1->AGT = 32768;   // 1000ms
+
+    // set compare registers to some values
+    R_AGT1->AGTCMA = 21845;
+    R_AGT1->AGTCMB = 10923;
+    //enable compare match
+    R_AGT1->AGTCMSR = 0x11;  // both enable bits
+
     R_AGT1->AGTCR = 1;
 }
 
