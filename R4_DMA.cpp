@@ -45,6 +45,7 @@ DMA_Channel* DMA_Channel::getChannel(){
   static bool assigned[4] = {false, false, false, false};
   for(int i=0; i<4; i++){
     if(!assigned[i]){
+      assigned[i] = true;
       return channels[i];
     }
   }
