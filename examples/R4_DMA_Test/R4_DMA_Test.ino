@@ -43,7 +43,14 @@ void xferEndHandler2(){
   // Re-enable DMAC
   DMA[2]->channel->DMCNT = 1;  
 }
-
+void xferEndHandler3(){
+  // reset Source Address
+  DMA[3]->channel->DMSAR = (uint32_t)&source + 12;
+  //reset counter
+  DMA[3]->channel->DMCRB = 5;
+  // Re-enable DMAC
+  DMA[3]->channel->DMCNT = 1;  
+}
 
 void setup() {
 
@@ -75,12 +82,21 @@ void setup() {
 
   DMA[2] = DMA_Channel::getChannel();
   if(!DMA[2]){
-    Serial.println("Didn't get DMA Channel 1!");
+    Serial.println("Didn't get DMA Channel 2!");
     while(1);
   }
   DMA[2]->start(&(settings[2]));
   DMA[2]->attachTransferEndInterrupt(xferEndHandler2);  
   DMA[2]->setTriggerSource(0x23); // set for AGT1 compare match B
+
+  DMA[3] = DMA_Channel::getChannel();
+  if(!DMA[3]){
+    Serial.println("Didn't get DMA Channel 3!");
+    while(1);
+  }
+  DMA[3]->start(&(settings[3]));
+  DMA[3]->attachTransferEndInterrupt(xferEndHandler3);  
+  DMA[3]->setTriggerSource(0); // set for Software Trigger
 
 
   Serial.println("End Setup");
@@ -92,22 +108,19 @@ void loop() {
     oldVal = destination[2];
     printOutput();
   }
+  uint8_t buttonState = digitalRead(buttonPin);
+  if(buttonState != oldButtonState){
+    delay(50);
+    buttonState = digitalRead(buttonPin);
+    if(buttonState == LOW){
+      doTransfer();
+    }
+    oldButtonState = buttonState;
+  }
 }
 
 void doTransfer() {
-  // for (int i = 0; i < transferSize + 15; i++) {
-  //   source[i]++;
-  // }
-  printRegisters(0);
-
-  Serial.print("Before Transfer : ");
-  printOutput();
-
-  DMA0.requestTransfer();
-  delay(10);  // we can work on timing later
-
-  Serial.print("After Transfer : ");
-  printOutput();
+  DMA[3]->requestTransfer();
 }
 
 void printOutput() {
@@ -131,7 +144,7 @@ void setupDMA() {
   settings[0].repeatAreaSelection = REPEAT_DESTINATION;
   settings[0].unitSize = SZ_32_BIT;
   settings[0].sourceAddress = (uint32_t)&source;
-  settings[0].destAddress = (uint32_t)destination + 8;
+  settings[0].destAddress = (uint32_t)destination + 4;
   settings[0].transferSize = 3;
   settings[0].transferCount = 5;
 
@@ -140,8 +153,8 @@ void setupDMA() {
   settings[1].mode = BLOCK;
   settings[1].repeatAreaSelection = REPEAT_DESTINATION;
   settings[1].unitSize = SZ_32_BIT;
-  settings[1].sourceAddress = (uint32_t)&source + 1;
-  settings[1].destAddress = (uint32_t)destination + 32;
+  settings[1].sourceAddress = (uint32_t)&source + 4;
+  settings[1].destAddress = (uint32_t)destination + 24;
   settings[1].transferSize = 3;
   settings[1].transferCount = 5;
 
@@ -150,20 +163,20 @@ void setupDMA() {
   settings[2].mode = BLOCK;
   settings[2].repeatAreaSelection = REPEAT_DESTINATION;
   settings[2].unitSize = SZ_32_BIT;
-  settings[2].sourceAddress = (uint32_t)&source + 2;
-  settings[2].destAddress = (uint32_t)destination + 56;
+  settings[2].sourceAddress = (uint32_t)&source + 8;
+  settings[2].destAddress = (uint32_t)destination + 40;
   settings[2].transferSize = 3;
   settings[2].transferCount = 5;
 
-  // settings[3].sourceUpdateMode = SOURCE_INCREMENT;
-  // settings[3].destUpdateMode = DEST_INCREMENT;
-  // settings[3].mode = BLOCK;
-  // settings[3].repeatAreaSelection = REPEAT_DESTINATION;
-  // settings[3].unitSize = SZ_32_BIT;
-  // settings[3].sourceAddress = (uint32_t)&source;
-  // settings[3].destAddress = (uint32_t)destination + 8;
-  // settings[3].transferSize = 3;
-  // settings[3].transferCount = 5;
+  settings[3].sourceUpdateMode = SOURCE_INCREMENT;
+  settings[3].destUpdateMode = DEST_INCREMENT;
+  settings[3].mode = BLOCK;
+  settings[3].repeatAreaSelection = REPEAT_DESTINATION;
+  settings[3].unitSize = SZ_32_BIT;
+  settings[3].sourceAddress = (uint32_t)&source + 12;
+  settings[3].destAddress = (uint32_t)destination + 56;
+  settings[3].transferSize = 3;
+  settings[3].transferCount = 5;
   
 }
 
