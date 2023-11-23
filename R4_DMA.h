@@ -99,6 +99,7 @@ class DMA_Channel {
 	DMA_Channel(const DMA_Channel&);
 	DMA_Channel& operator=(const DMA_Channel&);
 	R_DMAC0_Type *channel;
+	DMA_Channel();
 
 public:
 	void config(DMA_Settings *aSettings);
