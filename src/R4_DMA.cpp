@@ -68,7 +68,7 @@ bool DMA_Channel::getChannel() {
 void DMA_Channel::release() {
 	if (channel) {
 		// diable transfers
-		channel->DMCNT = 0;
+		stop();
 		// disable any triggers in the ILC
 		R_ICU->DELSR[channelIndex] = 0;
 		// detach any interrupts so the ILC doesn't hang
@@ -143,7 +143,7 @@ void DMA_Channel::detachInterrupt(){
 void DMA_Channel::setTriggerSource(uint8_t source) {
 	if (channel) {
 		// diable transfers
-		channel->DMCNT = 0;
+		stop();
 		if (source) {
 			R_ICU->DELSR[channelIndex] = source;
 			channel->DMTMD |= 1;
@@ -152,7 +152,7 @@ void DMA_Channel::setTriggerSource(uint8_t source) {
 			channel->DMTMD &= ~1;
 		}
 		// enable transfer
-		channel->DMCNT = 1;
+		start();
 	}
 }
 
