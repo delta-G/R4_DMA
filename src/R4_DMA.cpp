@@ -20,9 +20,7 @@
 
 #include "R4_DMA.h"
 
-//DMA_Channel DMA_Channel::channels[4] = { DMA_Channel(0), DMA_Channel(1),
-//		DMA_Channel(2), DMA_Channel(3) };
-//bool DMA_Channel::assigned[4] = { false, false, false, false };
+
 DMA_Channel *DMA_Channel::instances[4] = { NULL, NULL, NULL, NULL };
 
 void dtiHandler0() {

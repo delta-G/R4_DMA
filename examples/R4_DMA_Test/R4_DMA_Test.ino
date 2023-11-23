@@ -7,15 +7,13 @@
 
 #include "R4_DMA.h"
 
-const uint8_t groupSize = 5;
-
-uint32_t source[groupSize + 15] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
-uint32_t destination[groupSize + 15] = { 0 };
+uint32_t source[20] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
+uint32_t destination[20] = { 0 };
 
 uint8_t buttonPin = 7;
 uint8_t oldButtonState = HIGH;
 
-int dtiEventLinkIndex;
+
 DMA_Settings settings[5];
 DMA_Channel DMA[5];
 
@@ -145,12 +143,12 @@ void doTransfer() {
 
 void printOutput() {
   Serial.println();
-  for (int i = 0; i < groupSize + 15; i++) {
+  for (int i = 0; i < 20; i++) {
     Serial.print(" : ");
     Serial.print(source[i]);
   }
   Serial.println();
-  for (int i = 0; i < groupSize + 15; i++) {
+  for (int i = 0; i < 20; i++) {
     Serial.print(" : ");
     Serial.print(destination[i]);
   }
