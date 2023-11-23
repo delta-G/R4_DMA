@@ -35,65 +35,65 @@ The DMAC can be activated by a software trigger, but it’s most useful when tri
 
 The library exposes a struct type DMA_Settings.  The members of this struct and their options are as follows:
 
->**mode** – select any member of the MD_Option enum for the transfer mode<br>
+>**`mode`** – select any member of the MD_Option enum for the transfer mode<br>
 	**NORMAL**<br>
 	**REPEAT**<br>
 	**BLOCK**<br>
 
->**unitSize** – select any member of the SZ_Option enum for the transfer size<br>
+>**`unitSize`** – select any member of the SZ_Option enum for the transfer size<br>
 	**SZ_8_BIT**<br>
 	**SZ_16_BIT**<br>
 	**SZ_32_BIT**<br>
 
->**repeatAreaSelection** – select any member of the DTS_Option enum<br>
+>**`repeatAreaSelection`** – select any member of the DTS_Option enum<br>
 	**REPEAT_DESTINATION**<br>
 	**REPEAT_SOURCE**<br>
 	**NO_REPEAT**<br>
 
->**sourceUpdateMode** – select any member of the SM_Option enum<br>
+>**`sourceUpdateMode`** – select any member of the SM_Option enum<br>
 	**SOURCE_FIXED**<br>
 	**SOURCE_OFFSET**<br>
 	**SOURCE_INCREMENT**<br>
 	**SOURCE_DECREMENT**<br>
 
->**destinationUpdateMode** - select any member of the DM_Option enum<br>
+>**`destinationUpdateMode`** - select any member of the DM_Option enum<br>
 	**DEST_FIXED**<br>
 	**DEST_OFFSET**<br>
 	**DEST_INCREMENT**<br>
 	**DEST_DECREMENT**<br>
 
->**sourceAddress** – the 32bit address of the start of the source area as uint32_t
+>**`sourceAddress`** – the 32bit address of the start of the source area as uint32_t
 
->**destinationAddress** – the 32bit address of the start of the destination area as uint32_t
+>**`destinationAddress`** – the 32bit address of the start of the destination area as uint32_t
 
->**addressOffset** – 24 bit signed value to be used if either SOURCE_OFFSET or DEST_OFFSET are chosen as address modes.
+>**`addressOffset`** – 24 bit signed value to be used if either SOURCE_OFFSET or DEST_OFFSET are chosen as address modes.
 
->**groupSize** – an integer value from 0 to 1024.  In REPEAT mode this sets the repeat size.  In BLOCK mode this sets the block size.
+>**`groupSize`** – an integer value from 0 to 1024.  In REPEAT mode this sets the repeat size.  In BLOCK mode this sets the block size.
 
->**transferCount** – an integer value from 0 to 65535.  The number of transfers before the channel stops and the  DTI interrupt is triggered.  In NORMAL mode this will be the number of transfers before the channel stops.  In REPEAT mode this will be the number of repeats before the channel stops.  In block mode it will be the number of blocks before the channel stops.  
+>**`transferCount`** – an integer value from 0 to 65535.  The number of transfers before the channel stops and the  DTI interrupt is triggered.  In NORMAL mode this will be the number of transfers before the channel stops.  In REPEAT mode this will be the number of repeats before the channel stops.  In block mode it will be the number of blocks before the channel stops.  
 
 ## class DMA_Controller
 
 The DMA_Controller class exposes an interface for controlling the DMAC.  Since there are only four channels, only four instances of the class can be active at any given time.  Method calls on instances that are not connected to a channel will do nothing.  
 
->**bool getChannel()** - connects the instance to one of the four DMAC channels if one is available.  Returns true if a channel is assigned and false if there are no channels available.  Calling this function when a channel is already assigned has no effect.  
+>**`bool getChannel()`** - connects the instance to one of the four DMAC channels if one is available.  Returns true if a channel is assigned and false if there are no channels available.  Calling this function when a channel is already assigned has no effect.  
 
->**void config( DMA_Settings &settings)** – makes a copy of the settings and sets up all the registers to apply them.  Has a side effect of disabling the channel.  You must call start() after config.
+>**`void config( DMA_Settings &settings)`** – makes a copy of the settings and sets up all the registers to apply them.  Has a side effect of disabling the channel.  You must call start() after config.
 
->**void attachInterrupt( void(*isr)())** - attaches interrupt handler to be called when DTI interrupt is triggered. 
+>**`void attachInterrupt( void(*isr)())`** - attaches interrupt handler to be called when DTI interrupt is triggered. 
 
->**void detachInterrupt()** - disables the DTI interrupt but leaves the event linked in the ILC.
+>**`void detachInterrupt()`** - disables the DTI interrupt but leaves the event linked in the ILC.
 
->**void setTriggerSource(uint8_t source)** – sets one of the event link codes to be the trigger source for the DMAC.  Not all events can trigger the DMAC.  See table 13.4 in the “Renesas RA4M1 Group User’s Manual” for a list of event codes.  Set the source as 0 to enable software triggering of the DMAC. 
+>**`void setTriggerSource(uint8_t source)`** – sets one of the event link codes to be the trigger source for the DMAC.  Not all events can trigger the DMAC.  See table 13.4 in the “Renesas RA4M1 Group User’s Manual” for a list of event codes.  Set the source as 0 to enable software triggering of the DMAC. 
 
->**void requestTransfer()** - if the triger source is set to software trigger (setTriggerSource(0)) then this function will initiate the software trigger. 
+>**`void requestTransfer()`** - if the triger source is set to software trigger (setTriggerSource(0)) then this function will initiate the software trigger. 
 
->**void release()** - Stops the DMA channel, terminates any transfers, turns off any interrupts, disables the trigger, and returns the channel to the pool so another instance can use it.  Any further method calls will have no effect except for getChannel which can be called to request a new channel.  
+>**`void release()`** - Stops the DMA channel, terminates any transfers, turns off any interrupts, disables the trigger, and returns the channel to the pool so another instance can use it.  Any further method calls will have no effect except for getChannel which can be called to request a new channel.  
 
->**void stop()** - stops the DMA channel but retains ownership of the channel. 
+>**`void stop()`** - stops the DMA channel but retains ownership of the channel. 
 
->**void start()** - starts the channel.  At the next trigger a transfer will take place. 
+>**`void start()`** - starts the channel.  At the next trigger a transfer will take place. 
 
->**bool  hasChannel()** - returns true if the instance is currently connected to a DMA channel or false if not.
+>**`bool  hasChannel()`** - returns true if the instance is currently connected to a DMA channel or false if not.
 
 
