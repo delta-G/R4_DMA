@@ -54,7 +54,6 @@ bool DMA_Channel::getChannel() {
 	if (hasChannel()) {
 		rv = true;
 	} else {
-		channel = NULL;
 		for (int i = 0; i < 4; i++) {
 			if (!instances[i]) {
 				channel = channels[i];
@@ -74,11 +73,9 @@ void DMA_Channel::release() {
 		channel->DMCNT = 0;
 		// disable any triggers in the ILC
 		R_ICU->DELSR[channelIndex] = 0;
-
-		// if any interrupt is attached, detach it
+		// detach any interrupts so the ILC doesn't hang
 		detachInterrupt();
-
-		// release in assigned array
+		// release from the pool
 		instances[channelIndex] = NULL;
 		eventLinkIndex = -1;
 		channel = NULL;
