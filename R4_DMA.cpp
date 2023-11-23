@@ -20,60 +20,79 @@
 
 #include "R4_DMA.h"
 
-DMA_Channel DMA_Channel::channels[4] = { DMA_Channel(0), DMA_Channel(1),
-		DMA_Channel(2), DMA_Channel(3) };
-bool DMA_Channel::assigned[4] = { false, false, false, false };
+//DMA_Channel DMA_Channel::channels[4] = { DMA_Channel(0), DMA_Channel(1),
+//		DMA_Channel(2), DMA_Channel(3) };
+//bool DMA_Channel::assigned[4] = { false, false, false, false };
+DMA_Channel *DMA_Channel::instances[4] = { NULL, NULL, NULL, NULL };
 
 void dtiHandler0() {
-	DMA_Channel::channels[0].internalHandler();
+	if (DMA_Channel::instances[0]) {
+		DMA_Channel::instances[0]->internalHandler();
+	}
 }
 void dtiHandler1() {
-	DMA_Channel::channels[1].internalHandler();
+	if (DMA_Channel::instances[1]) {
+		DMA_Channel::instances[1]->internalHandler();
+	}
 }
 void dtiHandler2() {
-	DMA_Channel::channels[2].internalHandler();
+	if (DMA_Channel::instances[2]) {
+		DMA_Channel::instances[2]->internalHandler();
+	}
 }
 void dtiHandler3() {
-	DMA_Channel::channels[3].internalHandler();
+	if (DMA_Channel::instances[3]) {
+		DMA_Channel::instances[3]->internalHandler();
+	}
 }
 
 void (*handlers[])() = {dtiHandler0, dtiHandler1, dtiHandler2, dtiHandler3};
 
-/* static */DMA_Channel* DMA_Channel::getChannel() {
-	for (int i = 0; i < 4; i++) {
-		if (!assigned[i]) {
-			// mark the channel as used
-			assigned[i] = true;
-			return &(channels[i]);
+bool DMA_Channel::getChannel() {
+	R_DMAC0_Type *channels[] = { R_DMAC0, R_DMAC1, R_DMAC2, R_DMAC3 };
+	bool rv = false;
+	if (hasChannel()) {
+		rv = true;
+	} else {
+		channel = NULL;
+		for (int i = 0; i < 4; i++) {
+			if (!instances[i]) {
+				channel = channels[i];
+				channelIndex = i;
+				DMA_Channel::instances[channelIndex] = this;
+				rv = true;
+				break;
+			}
 		}
 	}
-	return 0;
+	return rv;
 }
 
 void DMA_Channel::release() {
-	// diable transfers
-	channel->DMCNT = 0;
-	// disable any triggers in the ILC
-	R_ICU->DELSR[channelIndex] = 0;
+	if (channel) {
+		// diable transfers
+		channel->DMCNT = 0;
+		// disable any triggers in the ILC
+		R_ICU->DELSR[channelIndex] = 0;
 
-	// release in assigned array
-	assigned[channelIndex] = false;
-}
+		// if any interrupt is attached, detach it
+		detachInterrupt();
 
-DMA_Channel::DMA_Channel(uint8_t aChannel) :
-		channelIndex(aChannel) {
-	R_DMAC0_Type *channels[] = { R_DMAC0, R_DMAC1, R_DMAC2, R_DMAC3 };
-	if (aChannel < 4) {
-		channel = channels[channelIndex];
+		// release in assigned array
+		instances[channelIndex] = NULL;
+		eventLinkIndex = -1;
+		channel = NULL;
 	}
 }
 
 void DMA_Channel::internalHandler() {
 	R_ICU->IELSR[eventLinkIndex] &= ~(R_ICU_IELSR_IR_Msk);
-	// Clear Interrupt Flag in DMAC
-	channel->DMSTS = 0x00;
-	if (isrCallback) {
-		isrCallback();
+	if (channel) {
+		// Clear Interrupt Flag in DMAC
+		channel->DMSTS = 0x00;
+		if (isrCallback) {
+			isrCallback();
+		}
 	}
 }
 
@@ -95,99 +114,140 @@ void DMA_Channel::startInterrupt() {
 	}
 }
 
-void DMA_Channel::attachTransferEndInterrupt(void (*isr)()) {
-	if (eventLinkIndex < 0) {
-		startInterrupt();
+void DMA_Channel::attachInterrupt(void (*isr)()) {
+	if (channel) {
+		// if we don't already have an interrupt
+		if (eventLinkIndex < 0) {
+			// Find the event link for our channel
+			for (uint8_t i = 0; i < 32; i++) {
+				volatile uint32_t val = R_ICU->IELSR[i];
+				// RTC_CUP event code is 0x28
+				if ((val & 0xFF) == (0x11ul + channelIndex)) {
+					eventLinkIndex = i;
+					break;
+				}
+			}
+			//If the interrupt isn't in the ILC yet
+			if (eventLinkIndex < 0) {
+				startInterrupt();
+			}
+		}
+		
+		channel->DMINT = 0x10;
+		isrCallback = isr;
 	}
-	channel->DMINT = 0x10;
-	isrCallback = isr;
+}
+
+void DMA_Channel::detachInterrupt(){
+	// turns off interrupt but keeps handler registered and eventLinkIndex ready
+	if(channel && (eventLinkIndex >= 0)){
+		channel->DMINT = 0;
+	}
 }
 
 void DMA_Channel::setTriggerSource(uint8_t source) {
-	// diable transfers
-	channel->DMCNT = 0;
-	if (source) {
-		R_ICU->DELSR[channelIndex] = source;
-		channel->DMTMD |= 1;
-	} else {
-		// set as software Trigger
-		channel->DMTMD &= ~1;
+	if (channel) {
+		// diable transfers
+		channel->DMCNT = 0;
+		if (source) {
+			R_ICU->DELSR[channelIndex] = source;
+			channel->DMTMD |= 1;
+		} else {
+			// set as software Trigger
+			channel->DMTMD &= ~1;
+		}
+		// enable transfer
+		channel->DMCNT = 1;
 	}
-	// enable transfer
-	channel->DMCNT = 1;
 }
 
 void DMA_Channel::requestTransfer() {
-	channel->DMREQ = 0x01;
-}
-
-void DMA_Channel::config(DMA_Settings *aSettings) {
-	settings = aSettings;
-	// disable controller
-	R_DMA->DMAST = 0;
-	// diable transfers
-	stop();
-	//set Address Mode Register
-	channel->DMAMD = (settings->sourceUpdateMode << R_DMAC0_DMAMD_SM_Pos)
-			| (settings->destUpdateMode << R_DMAC0_DMAMD_DM_Pos);
-	// set transfer Mode
-	channel->DMTMD = (settings->mode << R_DMAC0_DMTMD_MD_Pos)
-			| (settings->repeatAreaSelection << R_DMAC0_DMTMD_DTS_Pos)
-			| (settings->unitSize << R_DMAC0_DMTMD_SZ_Pos);
-	// set source and destination address
-	channel->DMSAR = settings->sourceAddress;
-	channel->DMDAR = settings->destAddress;
-	// set repeat size and transfer counter and block count
-	switch (settings->mode) {
-	case NORMAL:
-		channel->DMCRA = settings->transferCount;
-		channel->DMCRB = 0;
-		break;
-	case REPEAT:
-		channel->DMCRA = (settings->transferSize << 16)
-				| settings->transferSize;
-		channel->DMCRB = settings->transferCount;
-		break;
-	case BLOCK:
-		channel->DMCRA = (settings->transferSize << 16)
-				| settings->transferSize;
-		channel->DMCRB = settings->transferCount;
-		break;
+	if (channel) {
+		channel->DMREQ = 0x01;
 	}
-	// set offset register
-	channel->DMOFR = settings->addressOffset;
-
-	// enable DMAC controller
-	R_DMA->DMAST = 1;
 }
 
-void DMA_Channel::stop(){
-	channel->DMCNT = 0;
+void DMA_Channel::config(DMA_Settings &aSettings) {
+	if (channel) {
+		settings = &aSettings;
+		// diable transfers
+		stop();
+		//set Address Mode Register
+		channel->DMAMD = (settings->sourceUpdateMode << R_DMAC0_DMAMD_SM_Pos)
+				| (settings->destUpdateMode << R_DMAC0_DMAMD_DM_Pos);
+		// set transfer Mode
+		channel->DMTMD = (settings->mode << R_DMAC0_DMTMD_MD_Pos)
+				| (settings->repeatAreaSelection << R_DMAC0_DMTMD_DTS_Pos)
+				| (settings->unitSize << R_DMAC0_DMTMD_SZ_Pos);
+		// set source and destination address
+		channel->DMSAR = settings->sourceAddress;
+		channel->DMDAR = settings->destAddress;
+		// set repeat size and transfer counter and block count
+		switch (settings->mode) {
+		case NORMAL:
+			channel->DMCRA = settings->transferCount;
+			channel->DMCRB = 0;
+			break;
+		case REPEAT:
+			channel->DMCRA = (settings->transferSize << 16)
+					| settings->transferSize;
+			channel->DMCRB = settings->transferCount;
+			break;
+		case BLOCK:
+			channel->DMCRA = (settings->transferSize << 16)
+					| settings->transferSize;
+			channel->DMCRB = settings->transferCount;
+			break;
+		}
+		// set offset register
+		channel->DMOFR = settings->addressOffset;
+
+		// enable DMAC controller
+		R_DMA->DMAST = 1;
+	}
 }
 
-void DMA_Channel::start(){
-	channel->DMCNT = 1;
+bool DMA_Channel::hasChannel() {
+	return channel != NULL;
 }
 
-void DMA_Channel::resetSourceAddress(){
-	channel->DMSAR = settings->sourceAddress;
+void DMA_Channel::stop() {
+	if (channel) {
+		channel->DMCNT = 0;
+	}
 }
 
-void DMA_Channel::resetDestinationAddress(){
-	channel->DMDAR = settings->destAddress;
+void DMA_Channel::start() {
+	if (channel) {
+		channel->DMCNT = 1;
+	}
+}
+
+void DMA_Channel::resetSourceAddress() {
+	if (channel) {
+		channel->DMSAR = settings->sourceAddress;
+	}
+}
+
+void DMA_Channel::resetDestinationAddress() {
+	if (channel) {
+		channel->DMDAR = settings->destAddress;
+	}
 }
 
 void DMA_Channel::resetCounter() {
-	switch (settings->mode) {
-	case NORMAL:
-		channel->DMCRA = settings->transferCount;
-		channel->DMCRB = 0;
-		break;
-	case REPEAT:
-		channel->DMCRB = settings->transferCount;
-		break;
-	case BLOCK:
-		channel->DMCRB = settings->transferCount;
-		break;
+	if (channel) {
+		switch (settings->mode) {
+		case NORMAL:
+			channel->DMCRA = settings->transferCount;
+			channel->DMCRB = 0;
+			break;
+		case REPEAT:
+			channel->DMCRB = settings->transferCount;
+			break;
+		case BLOCK:
+			channel->DMCRB = settings->transferCount;
+			break;
+		}
 	}
 }

@@ -88,23 +88,22 @@ class DMA_Channel {
 	friend void dtiHandler1();
 	friend void dtiHandler2();
 	friend void dtiHandler3();
-	static DMA_Channel channels[4];
-	static bool assigned[4];
+	static DMA_Channel* instances[4];
 	
 
 	void internalHandler();
 
-	DMA_Channel(uint8_t aChannel);
-	~DMA_Channel() {}
 	DMA_Channel(const DMA_Channel&);
 	DMA_Channel& operator=(const DMA_Channel&);
 	R_DMAC0_Type *channel;
-	DMA_Channel();
 
 public:
-	void config(DMA_Settings *aSettings);
+	DMA_Channel(){}
+	~DMA_Channel() {release();}  // make sure DMA is turned off if channel goes out of scope
+	void config(DMA_Settings &aSettings);
 	void requestTransfer();
-	void attachTransferEndInterrupt(void (*isr)());
+	void attachInterrupt(void (*isr)());
+	void detachInterrupt();
 	void setTriggerSource(uint8_t source);
 	void release();
 	
@@ -115,12 +114,9 @@ public:
 	void stop();
 	void start();	
 
-	static DMA_Channel* getChannel();
+	bool getChannel();
+	bool hasChannel();
 };
 
-extern DMA_Channel DMA0;
-extern DMA_Channel DMA1;
-extern DMA_Channel DMA2;
-extern DMA_Channel DMA3;
 
 #endif  //R4_DMA_H
