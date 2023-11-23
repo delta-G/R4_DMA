@@ -20,9 +20,9 @@
 
 #include "R4_DMA.h"
 
-
-DMA_Channel DMA_Channel::channels[4] = {DMA_Channel(0), DMA_Channel(1), DMA_Channel(2), DMA_Channel(3)};
-bool DMA_Channel::assigned[4]  = { false, false, false, false };
+DMA_Channel DMA_Channel::channels[4] = { DMA_Channel(0), DMA_Channel(1),
+		DMA_Channel(2), DMA_Channel(3) };
+bool DMA_Channel::assigned[4] = { false, false, false, false };
 
 void dtiHandler0() {
 	DMA_Channel::channels[0].internalHandler();
@@ -39,7 +39,7 @@ void dtiHandler3() {
 
 void (*handlers[])() = {dtiHandler0, dtiHandler1, dtiHandler2, dtiHandler3};
 
-DMA_Channel* DMA_Channel::getChannel() {
+/* static */DMA_Channel* DMA_Channel::getChannel() {
 	for (int i = 0; i < 4; i++) {
 		if (!assigned[i]) {
 			// mark the channel as used
@@ -50,6 +50,16 @@ DMA_Channel* DMA_Channel::getChannel() {
 	return 0;
 }
 
+void DMA_Channel::release() {
+	// diable transfers
+	channel->DMCNT = 0;
+	// disable any triggers in the ILC
+	R_ICU->DELSR[channelIndex] = 0;
+
+	// release in assigned array
+	assigned[channelIndex] = false;
+}
+
 DMA_Channel::DMA_Channel(uint8_t aChannel) :
 		channelIndex(aChannel) {
 	R_DMAC0_Type *channels[] = { R_DMAC0, R_DMAC1, R_DMAC2, R_DMAC3 };
@@ -57,7 +67,6 @@ DMA_Channel::DMA_Channel(uint8_t aChannel) :
 		channel = channels[channelIndex];
 	}
 }
-;
 
 void DMA_Channel::internalHandler() {
 	R_ICU->IELSR[eventLinkIndex] &= ~(R_ICU_IELSR_IR_Msk);
@@ -112,12 +121,12 @@ void DMA_Channel::requestTransfer() {
 	channel->DMREQ = 0x01;
 }
 
-void DMA_Channel::start(DMA_Settings *aSettings) {
+void DMA_Channel::config(DMA_Settings *aSettings) {
 	settings = aSettings;
 	// disable controller
 	R_DMA->DMAST = 0;
 	// diable transfers
-	channel->DMCNT = 0;
+	stop();
 	//set Address Mode Register
 	channel->DMAMD = (settings->sourceUpdateMode << R_DMAC0_DMAMD_SM_Pos)
 			| (settings->destUpdateMode << R_DMAC0_DMAMD_DM_Pos);
@@ -148,8 +157,37 @@ void DMA_Channel::start(DMA_Settings *aSettings) {
 	// set offset register
 	channel->DMOFR = settings->addressOffset;
 
-	// enable transfer
-	channel->DMCNT = 1;
 	// enable DMAC controller
 	R_DMA->DMAST = 1;
+}
+
+void DMA_Channel::stop(){
+	channel->DMCNT = 0;
+}
+
+void DMA_Channel::start(){
+	channel->DMCNT = 1;
+}
+
+void DMA_Channel::resetSourceAddress(){
+	channel->DMSAR = settings->sourceAddress;
+}
+
+void DMA_Channel::resetDestinationAddress(){
+	channel->DMDAR = settings->destAddress;
+}
+
+void DMA_Channel::resetCounter() {
+	switch (settings->mode) {
+	case NORMAL:
+		channel->DMCRA = settings->transferCount;
+		channel->DMCRB = 0;
+		break;
+	case REPEAT:
+		channel->DMCRB = settings->transferCount;
+		break;
+	case BLOCK:
+		channel->DMCRB = settings->transferCount;
+		break;
+	}
 }

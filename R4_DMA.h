@@ -90,15 +90,30 @@ class DMA_Channel {
 	friend void dtiHandler3();
 	static DMA_Channel channels[4];
 	static bool assigned[4];
+	
+
+	void internalHandler();
+
+	DMA_Channel(uint8_t aChannel);
+	~DMA_Channel() {}
+	DMA_Channel(const DMA_Channel&);
+	DMA_Channel& operator=(const DMA_Channel&);
+	R_DMAC0_Type *channel;
 
 public:
-	R_DMAC0_Type *channel;
-	DMA_Channel(uint8_t aChannel);
-	void start(DMA_Settings *aSettings);
+	void config(DMA_Settings *aSettings);
 	void requestTransfer();
 	void attachTransferEndInterrupt(void (*isr)());
-	void internalHandler();
 	void setTriggerSource(uint8_t source);
+	void release();
+	
+	void resetCounter();
+	void resetSourceAddress();
+	void resetDestinationAddress();
+	
+	void stop();
+	void start();	
+
 	static DMA_Channel* getChannel();
 };
 
