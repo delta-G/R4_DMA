@@ -1,0 +1,53 @@
+#######################################
+# Syntax Coloring Map For R4_DMA.h
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+DMA_Settings	KEYWORD1
+DMA_Channel	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+getChannel	KEYWORD2
+config	KEYWORD2
+attachInterrupt	KEYWORD2
+detachInterrupt	KEYWORD2
+setTriggerSource	KEYWORD2
+requestTransfer	KEYWORD2
+release	KEYWORD2
+stop	KEYWORD2
+start	KEYWORD2
+hasChannel	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+NORMAL	LITERAL1
+REPEAT	LITERAL1
+BLOCK	LITERAL1
+SZ_8_BIT	LITERAL1
+SZ_16_BIT	LITERAL1
+SZ_32_BIT	LITERAL1
+REPEAT_DESTINATION	LITERAL1
+REPEAT_SOURCE	LITERAL1
+NO_REPEAT	LITERAL1
+SOURCE_FIXED	LITERAL1
+SOURCE_OFFSET	LITERAL1
+SOURCE_INCREMENT	LITERAL1
+SOURCE_DECREMENT	LITERAL1
+DEST_FIXED	LITERAL1
+DEST_OFFSET	LITERAL1
+DEST_INCREMENT	LITERAL1
+DEST_DECREMENT	LITERAL1
+

@@ -81,9 +81,9 @@ The DMA_Controller class exposes an interface for controlling the DMAC.  Since t
 
 * **`bool getChannel()`** - connects the instance to one of the four DMAC channels if one is available.  Returns true if a channel is assigned and false if there are no channels available.  Calling this function when a channel is already assigned has no effect.  
 
-* **`void config( DMA_Settings &settings)`** – makes a copy of the settings and sets up all the registers to apply them.  Has a side effect of disabling the channel.  You must call start() after config.
+* **`void config(DMA_Settings &settings)`** – makes a copy of the settings and sets up all the registers to apply them.  Has a side effect of disabling the channel.  You must call start() after config.
 
-* **`void attachInterrupt( void(*isr)())`** - attaches interrupt handler to be called when DTI interrupt is triggered. 
+* **`void attachInterrupt(void(*isr)())`** - attaches interrupt handler to be called when DTI interrupt is triggered. 
 
 * **`void detachInterrupt()`** - disables the DTI interrupt but leaves the event linked in the ILC.
 
@@ -97,6 +97,6 @@ The DMA_Controller class exposes an interface for controlling the DMAC.  Since t
 
 * **`void start()`** - starts the channel.  At the next trigger a transfer will take place. 
 
-* **`bool  hasChannel()`** - returns true if the instance is currently connected to a DMA channel or false if not.
+* **`bool hasChannel()`** - returns true if the instance is currently connected to a DMA channel or false if not.
 
 
