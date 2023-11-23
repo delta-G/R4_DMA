@@ -67,20 +67,20 @@ struct DMA_Settings {
 	SZ_Option unitSize;
 	DTS_Option repeatAreaSelection;
 	SM_Option sourceUpdateMode;
-	DM_Option destUpdateMode;
+	DM_Option destinationUpdateMode;
 
 	uint32_t sourceAddress;
-	uint32_t destAddress;
+	uint32_t destinationAddress;
 	uint32_t addressOffset;
 
 	uint16_t transferCount;
-	uint16_t transferSize;
+	uint16_t groupSize;
 };
 
 class DMA_Channel {
 	
 	uint8_t channelIndex;
-	DMA_Settings *settings;
+	DMA_Settings settings;
 	int eventLinkIndex = -1;
 	void (*isrCallback)();
 	void startInterrupt();

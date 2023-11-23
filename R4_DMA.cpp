@@ -166,38 +166,38 @@ void DMA_Channel::requestTransfer() {
 
 void DMA_Channel::config(DMA_Settings &aSettings) {
 	if (channel) {
-		settings = &aSettings;
+		settings = aSettings;
 		// diable transfers
 		stop();
 		//set Address Mode Register
-		channel->DMAMD = (settings->sourceUpdateMode << R_DMAC0_DMAMD_SM_Pos)
-				| (settings->destUpdateMode << R_DMAC0_DMAMD_DM_Pos);
+		channel->DMAMD = (settings.sourceUpdateMode << R_DMAC0_DMAMD_SM_Pos)
+				| (settings.destinationUpdateMode << R_DMAC0_DMAMD_DM_Pos);
 		// set transfer Mode
-		channel->DMTMD = (settings->mode << R_DMAC0_DMTMD_MD_Pos)
-				| (settings->repeatAreaSelection << R_DMAC0_DMTMD_DTS_Pos)
-				| (settings->unitSize << R_DMAC0_DMTMD_SZ_Pos);
+		channel->DMTMD = (settings.mode << R_DMAC0_DMTMD_MD_Pos)
+				| (settings.repeatAreaSelection << R_DMAC0_DMTMD_DTS_Pos)
+				| (settings.unitSize << R_DMAC0_DMTMD_SZ_Pos);
 		// set source and destination address
-		channel->DMSAR = settings->sourceAddress;
-		channel->DMDAR = settings->destAddress;
+		channel->DMSAR = settings.sourceAddress;
+		channel->DMDAR = settings.destinationAddress;
 		// set repeat size and transfer counter and block count
-		switch (settings->mode) {
+		switch (settings.mode) {
 		case NORMAL:
-			channel->DMCRA = settings->transferCount;
+			channel->DMCRA = settings.transferCount;
 			channel->DMCRB = 0;
 			break;
 		case REPEAT:
-			channel->DMCRA = (settings->transferSize << 16)
-					| settings->transferSize;
-			channel->DMCRB = settings->transferCount;
+			channel->DMCRA = (settings.groupSize << 16)
+					| settings.groupSize;
+			channel->DMCRB = settings.transferCount;
 			break;
 		case BLOCK:
-			channel->DMCRA = (settings->transferSize << 16)
-					| settings->transferSize;
-			channel->DMCRB = settings->transferCount;
+			channel->DMCRA = (settings.groupSize << 16)
+					| settings.groupSize;
+			channel->DMCRB = settings.transferCount;
 			break;
 		}
 		// set offset register
-		channel->DMOFR = settings->addressOffset;
+		channel->DMOFR = settings.addressOffset;
 
 		// enable DMAC controller
 		R_DMA->DMAST = 1;
@@ -222,28 +222,28 @@ void DMA_Channel::start() {
 
 void DMA_Channel::resetSourceAddress() {
 	if (channel) {
-		channel->DMSAR = settings->sourceAddress;
+		channel->DMSAR = settings.sourceAddress;
 	}
 }
 
 void DMA_Channel::resetDestinationAddress() {
 	if (channel) {
-		channel->DMDAR = settings->destAddress;
+		channel->DMDAR = settings.destinationAddress;
 	}
 }
 
 void DMA_Channel::resetCounter() {
 	if (channel) {
-		switch (settings->mode) {
+		switch (settings.mode) {
 		case NORMAL:
-			channel->DMCRA = settings->transferCount;
+			channel->DMCRA = settings.transferCount;
 			channel->DMCRB = 0;
 			break;
 		case REPEAT:
-			channel->DMCRB = settings->transferCount;
+			channel->DMCRB = settings.transferCount;
 			break;
 		case BLOCK:
-			channel->DMCRB = settings->transferCount;
+			channel->DMCRB = settings.transferCount;
 			break;
 		}
 	}
