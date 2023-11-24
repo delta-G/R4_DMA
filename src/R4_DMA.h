@@ -75,6 +75,8 @@ struct DMA_Settings {
 
 	uint16_t transferCount;
 	uint16_t groupSize;
+	
+	uint8_t triggerSource;
 };
 
 class DMA_Channel {

@@ -20,7 +20,6 @@
 
 #include "R4_DMA.h"
 
-
 DMA_Channel *DMA_Channel::instances[4] = { NULL, NULL, NULL, NULL };
 
 void dtiHandler0() {
@@ -127,21 +126,27 @@ void DMA_Channel::attachInterrupt(void (*isr)()) {
 				startInterrupt();
 			}
 		}
-		
+
 		channel->DMINT = 0x10;
 		isrCallback = isr;
 	}
 }
 
-void DMA_Channel::detachInterrupt(){
+void DMA_Channel::detachInterrupt() {
 	// turns off interrupt but keeps handler registered and eventLinkIndex ready
-	if(channel && (eventLinkIndex >= 0)){
+	if (channel && (eventLinkIndex >= 0)) {
 		channel->DMINT = 0;
 	}
 }
 
 void DMA_Channel::setTriggerSource(uint8_t source) {
 	if (channel) {
+		// if the channel is on we need to stop and restart it
+		bool restart = false;
+		if (channel->DMCNT & 1) {
+			stop();
+			restart = true;
+		}
 		// diable transfers
 		stop();
 		if (source) {
@@ -151,8 +156,10 @@ void DMA_Channel::setTriggerSource(uint8_t source) {
 			// set as software Trigger
 			channel->DMTMD &= ~1;
 		}
-		// enable transfer
-		start();
+		// enable transfer if it was running to begin with
+		if (restart) {
+			start();
+		}
 	}
 }
 
@@ -184,18 +191,18 @@ void DMA_Channel::config(DMA_Settings &aSettings) {
 			channel->DMCRB = 0;
 			break;
 		case REPEAT:
-			channel->DMCRA = (settings.groupSize << 16)
-					| settings.groupSize;
+			channel->DMCRA = (settings.groupSize << 16) | settings.groupSize;
 			channel->DMCRB = settings.transferCount;
 			break;
 		case BLOCK:
-			channel->DMCRA = (settings.groupSize << 16)
-					| settings.groupSize;
+			channel->DMCRA = (settings.groupSize << 16) | settings.groupSize;
 			channel->DMCRB = settings.transferCount;
 			break;
 		}
 		// set offset register
 		channel->DMOFR = settings.addressOffset;
+		
+		setTriggerSource(settings.triggerSource);
 
 		// enable DMAC controller
 		R_DMA->DMAST = 1;

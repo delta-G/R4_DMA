@@ -69,7 +69,6 @@ void setup() {
   }
   DMA[0].config(settings[0]);
   DMA[0].attachInterrupt(xferEndHandler0);
-  DMA[0].setTriggerSource(0x21);  // set for AGT1 underflow
   DMA[0].start();
 
   if (!DMA[1].getChannel()) {
@@ -79,7 +78,6 @@ void setup() {
   }
   DMA[1].config(settings[1]);
   DMA[1].attachInterrupt(xferEndHandler1);
-  DMA[1].setTriggerSource(0x22);  // set for AGT1 compare match A
   DMA[1].start();
 
   if (!DMA[2].getChannel()) {
@@ -89,7 +87,6 @@ void setup() {
   }
   DMA[2].config(settings[2]);
   DMA[2].attachInterrupt(xferEndHandler2);
-  DMA[2].setTriggerSource(0x23);  // set for AGT1 compare match B
   DMA[2].start();
 
   if (!DMA[3].getChannel()) {
@@ -99,7 +96,6 @@ void setup() {
   }
   DMA[3].config(settings[3]);
   DMA[3].attachInterrupt(xferEndHandler3);
-  DMA[3].setTriggerSource(0);  // set for Software Trigger
   DMA[3].start();
 
 
@@ -132,7 +128,6 @@ void loop() {
       while (1);
     }
     DMA[4].config(settings[4]);
-    DMA[4].setTriggerSource(0);
     DMA[4].start();
   }
 }
@@ -165,6 +160,7 @@ void setupDMA() {
   settings[0].destinationAddress = (uint32_t)destination + 4;
   settings[0].groupSize = 3;
   settings[0].transferCount = 5;
+  settings[0].triggerSource = 0x21;  //AGT1 underflow
 
   settings[1].sourceUpdateMode = INCREMENT;
   settings[1].destinationUpdateMode = INCREMENT;
@@ -175,6 +171,7 @@ void setupDMA() {
   settings[1].destinationAddress = (uint32_t)destination + 20;
   settings[1].groupSize = 3;
   settings[1].transferCount = 5;
+  settings[1].triggerSource = 0x22;  //AGT1 Compare Match A
 
   settings[2].sourceUpdateMode = INCREMENT;
   settings[2].destinationUpdateMode = INCREMENT;
@@ -185,6 +182,7 @@ void setupDMA() {
   settings[2].destinationAddress = (uint32_t)destination + 36;
   settings[2].groupSize = 3;
   settings[2].transferCount = 5;
+  settings[2].triggerSource = 0x23;  //AGT1 Compare Match B
 
   settings[3].sourceUpdateMode = INCREMENT;
   settings[3].destinationUpdateMode = INCREMENT;
@@ -195,6 +193,7 @@ void setupDMA() {
   settings[3].destinationAddress = (uint32_t)destination + 52;
   settings[3].groupSize = 3;
   settings[3].transferCount = 5;
+  settings[3].triggerSource = 0;  //Software Trigger
 
   settings[4].sourceUpdateMode = INCREMENT;
   settings[4].destinationUpdateMode = INCREMENT;
@@ -205,6 +204,7 @@ void setupDMA() {
   settings[4].destinationAddress = (uint32_t)destination + 56;
   settings[4].groupSize = 3;
   settings[4].transferCount = 5;
+  settings[4].triggerSource = 0;  // Software Trigger
 }
 
 void setupAGT1() {

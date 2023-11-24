@@ -32,6 +32,7 @@ void setup() {
   settings.addressOffset = 0;
   settings.groupSize = 3;
   settings.transferCount = 7;
+  settings.triggerSource = 0x21; // AGT1 underflow event
 
   // get a DMA channel
   if(!dma.getChannel()){
@@ -41,8 +42,6 @@ void setup() {
   dma.config(settings);
   // attach the interrupt
   dma.attachInterrupt(xferEndHandler);
-  // set the trigger source to the AGT1 underflow (event 0x21)
-  dma.setTriggerSource(0x21);
   // Start the DMA channel
   dma.start();
 
