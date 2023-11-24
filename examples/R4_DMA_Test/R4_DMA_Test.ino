@@ -156,8 +156,8 @@ void setupDMA() {
   settings[0].mode = BLOCK;
   settings[0].repeatAreaSelection = REPEAT_DESTINATION;
   settings[0].unitSize = SZ_32_BIT;
-  settings[0].sourceAddress = (uint32_t)source;
-  settings[0].destinationAddress = (uint32_t)destination + 4;
+  settings[0].sourceAddress = source;
+  settings[0].destinationAddress = destination + 1;
   settings[0].groupSize = 3;
   settings[0].transferCount = 5;
   settings[0].triggerSource = 0x21;  //AGT1 underflow
@@ -167,8 +167,8 @@ void setupDMA() {
   settings[1].mode = BLOCK;
   settings[1].repeatAreaSelection = REPEAT_DESTINATION;
   settings[1].unitSize = SZ_32_BIT;
-  settings[1].sourceAddress = (uint32_t)source + 4;
-  settings[1].destinationAddress = (uint32_t)destination + 20;
+  settings[1].sourceAddress = &(source[1]);
+  settings[1].destinationAddress = &(destination[5]);
   settings[1].groupSize = 3;
   settings[1].transferCount = 5;
   settings[1].triggerSource = 0x22;  //AGT1 Compare Match A
@@ -178,8 +178,8 @@ void setupDMA() {
   settings[2].mode = BLOCK;
   settings[2].repeatAreaSelection = REPEAT_DESTINATION;
   settings[2].unitSize = SZ_32_BIT;
-  settings[2].sourceAddress = (uint32_t)source + 8;
-  settings[2].destinationAddress = (uint32_t)destination + 36;
+  settings[2].sourceAddress = source + 2;
+  settings[2].destinationAddress = destination + 9;
   settings[2].groupSize = 3;
   settings[2].transferCount = 5;
   settings[2].triggerSource = 0x23;  //AGT1 Compare Match B
@@ -189,8 +189,8 @@ void setupDMA() {
   settings[3].mode = BLOCK;
   settings[3].repeatAreaSelection = REPEAT_DESTINATION;
   settings[3].unitSize = SZ_32_BIT;
-  settings[3].sourceAddress = (uint32_t)source + 12;
-  settings[3].destinationAddress = (uint32_t)destination + 52;
+  settings[3].sourceAddress = source + 3;
+  settings[3].destinationAddress = destination + 13;
   settings[3].groupSize = 3;
   settings[3].transferCount = 5;
   settings[3].triggerSource = 0;  //Software Trigger
@@ -200,8 +200,8 @@ void setupDMA() {
   settings[4].mode = BLOCK;
   settings[4].repeatAreaSelection = REPEAT_DESTINATION;
   settings[4].unitSize = SZ_32_BIT;
-  settings[4].sourceAddress = (uint32_t)source + 16;
-  settings[4].destinationAddress = (uint32_t)destination + 56;
+  settings[4].sourceAddress = source + 4;
+  settings[4].destinationAddress = destination + 14;
   settings[4].groupSize = 3;
   settings[4].transferCount = 5;
   settings[4].triggerSource = 0;  // Software Trigger

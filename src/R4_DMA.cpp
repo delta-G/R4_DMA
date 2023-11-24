@@ -182,8 +182,8 @@ void DMA_Channel::config(DMA_Settings &aSettings) {
 				| (settings.repeatAreaSelection << R_DMAC0_DMTMD_DTS_Pos)
 				| (settings.unitSize << R_DMAC0_DMTMD_SZ_Pos);
 		// set source and destination address
-		channel->DMSAR = settings.sourceAddress;
-		channel->DMDAR = settings.destinationAddress;
+		channel->DMSAR = reinterpret_cast<uint32_t>(settings.sourceAddress);
+		channel->DMDAR = reinterpret_cast<uint32_t>(settings.destinationAddress);
 		// set repeat size and transfer counter and block count
 		switch (settings.mode) {
 		case NORMAL:
@@ -227,13 +227,13 @@ void DMA_Channel::start() {
 
 void DMA_Channel::resetSourceAddress() {
 	if (channel) {
-		channel->DMSAR = settings.sourceAddress;
+		channel->DMSAR = reinterpret_cast<uint32_t>(settings.sourceAddress);
 	}
 }
 
 void DMA_Channel::resetDestinationAddress() {
 	if (channel) {
-		channel->DMDAR = settings.destinationAddress;
+		channel->DMDAR = reinterpret_cast<uint32_t>(settings.destinationAddress);
 	}
 }
 

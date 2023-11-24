@@ -69,8 +69,8 @@ struct DMA_Settings {
 	SMDM_Option sourceUpdateMode;
 	SMDM_Option destinationUpdateMode;
 
-	uint32_t sourceAddress;
-	uint32_t destinationAddress;
+	void* sourceAddress;
+	void* destinationAddress;
 	uint32_t addressOffset;
 
 	uint16_t transferCount;

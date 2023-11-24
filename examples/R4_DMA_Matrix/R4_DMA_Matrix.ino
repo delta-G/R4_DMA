@@ -27,8 +27,8 @@ void setup() {
   settings.repeatAreaSelection = REPEAT_DESTINATION;
   settings.sourceUpdateMode = INCREMENT;
   settings.destinationUpdateMode = INCREMENT;
-  settings.sourceAddress = (uint32_t)frames;
-  settings.destinationAddress = (uint32_t)framebuffer;
+  settings.sourceAddress = frames;
+  settings.destinationAddress = framebuffer;
   settings.addressOffset = 0;
   settings.groupSize = 3;
   settings.transferCount = 7;

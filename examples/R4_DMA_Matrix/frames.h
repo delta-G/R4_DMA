@@ -1,4 +1,4 @@
-const uint32_t frames[] = {
+uint32_t frames[] = {
   // danger
   0xA8050020,
   0x41040A80,
