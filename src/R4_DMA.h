@@ -45,29 +45,29 @@ typedef enum {
 	BLOCK
 } MD_Option;
 
-// DMA Source Address Update Mode
+// DMA Source/Destination Address Update Mode
 typedef enum {
-	SOURCE_FIXED, 
-	SOURCE_OFFSET, 
-	SOURCE_INCREMENT, 
-	SOURCE_DECREMENT
-} SM_Option;
+	FIXED, 
+	OFFSET, 
+	INCREMENT, 
+	DECREMENT
+} SMDM_Option;
 
-// DMA Destination Address Update Mode
-typedef enum {
-	DEST_FIXED, 
-	DEST_OFFSET, 
-	DEST_INCREMENT, 
-	DEST_DECREMENT
-} DM_Option;
+//// DMA Destination Address Update Mode
+//typedef enum {
+//	DEST_FIXED, 
+//	DEST_OFFSET, 
+//	DEST_INCREMENT, 
+//	DEST_DECREMENT
+//} DM_Option;
 
 struct DMA_Settings {
 
 	MD_Option mode;
 	SZ_Option unitSize;
 	DTS_Option repeatAreaSelection;
-	SM_Option sourceUpdateMode;
-	DM_Option destinationUpdateMode;
+	SMDM_Option sourceUpdateMode;
+	SMDM_Option destinationUpdateMode;
 
 	uint32_t sourceAddress;
 	uint32_t destinationAddress;

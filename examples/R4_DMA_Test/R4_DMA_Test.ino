@@ -156,52 +156,52 @@ void printOutput() {
 }
 
 void setupDMA() {
-  settings[0].sourceUpdateMode = SOURCE_INCREMENT;
-  settings[0].destinationUpdateMode = DEST_INCREMENT;
+  settings[0].sourceUpdateMode = INCREMENT;
+  settings[0].destinationUpdateMode = INCREMENT;
   settings[0].mode = BLOCK;
   settings[0].repeatAreaSelection = REPEAT_DESTINATION;
   settings[0].unitSize = SZ_32_BIT;
-  settings[0].sourceAddress = (uint32_t)&source;
+  settings[0].sourceAddress = (uint32_t)source;
   settings[0].destinationAddress = (uint32_t)destination + 4;
   settings[0].groupSize = 3;
   settings[0].transferCount = 5;
 
-  settings[1].sourceUpdateMode = SOURCE_INCREMENT;
-  settings[1].destinationUpdateMode = DEST_INCREMENT;
+  settings[1].sourceUpdateMode = INCREMENT;
+  settings[1].destinationUpdateMode = INCREMENT;
   settings[1].mode = BLOCK;
   settings[1].repeatAreaSelection = REPEAT_DESTINATION;
   settings[1].unitSize = SZ_32_BIT;
-  settings[1].sourceAddress = (uint32_t)&source + 4;
+  settings[1].sourceAddress = (uint32_t)source + 4;
   settings[1].destinationAddress = (uint32_t)destination + 20;
   settings[1].groupSize = 3;
   settings[1].transferCount = 5;
 
-  settings[2].sourceUpdateMode = SOURCE_INCREMENT;
-  settings[2].destinationUpdateMode = DEST_INCREMENT;
+  settings[2].sourceUpdateMode = INCREMENT;
+  settings[2].destinationUpdateMode = INCREMENT;
   settings[2].mode = BLOCK;
   settings[2].repeatAreaSelection = REPEAT_DESTINATION;
   settings[2].unitSize = SZ_32_BIT;
-  settings[2].sourceAddress = (uint32_t)&source + 8;
+  settings[2].sourceAddress = (uint32_t)source + 8;
   settings[2].destinationAddress = (uint32_t)destination + 36;
   settings[2].groupSize = 3;
   settings[2].transferCount = 5;
 
-  settings[3].sourceUpdateMode = SOURCE_INCREMENT;
-  settings[3].destinationUpdateMode = DEST_INCREMENT;
+  settings[3].sourceUpdateMode = INCREMENT;
+  settings[3].destinationUpdateMode = INCREMENT;
   settings[3].mode = BLOCK;
   settings[3].repeatAreaSelection = REPEAT_DESTINATION;
   settings[3].unitSize = SZ_32_BIT;
-  settings[3].sourceAddress = (uint32_t)&source + 12;
+  settings[3].sourceAddress = (uint32_t)source + 12;
   settings[3].destinationAddress = (uint32_t)destination + 52;
   settings[3].groupSize = 3;
   settings[3].transferCount = 5;
 
-  settings[4].sourceUpdateMode = SOURCE_INCREMENT;
-  settings[4].destinationUpdateMode = DEST_INCREMENT;
+  settings[4].sourceUpdateMode = INCREMENT;
+  settings[4].destinationUpdateMode = INCREMENT;
   settings[4].mode = BLOCK;
   settings[4].repeatAreaSelection = REPEAT_DESTINATION;
   settings[4].unitSize = SZ_32_BIT;
-  settings[4].sourceAddress = (uint32_t)&source + 16;
+  settings[4].sourceAddress = (uint32_t)source + 16;
   settings[4].destinationAddress = (uint32_t)destination + 56;
   settings[4].groupSize = 3;
   settings[4].transferCount = 5;
